@@ -1,0 +1,18 @@
+[project]
+name = "agent-innovation"
+version = "0.1.0"
+description = "Idea portal: employee idea intake and an innovation dashboard"
+requires-python = ">=3.10"
+dependencies = [
+    "gradio>=6.32",
+    "openai-agents>=0.26",
+    "psycopg[binary]>=3.3",
+    "pyyaml>=6",
+]
+
+# The portal runs from its source folder, so only the dependencies are installed.
+[tool.uv]
+package = false
+
+[tool.setuptools]
+py-modules = []
