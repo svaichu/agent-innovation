@@ -6,12 +6,29 @@ The innovation user gets the Innovation Dashboard, employees get the Employee
 Interface.
 """
 
+import subprocess
+from pathlib import Path
+
 import gradio as gr
 
 import employee_interface
 import innovation_dashboard
 from auth import check_login, find_employee, is_dashboard_user
 from db import connect, create_tables
+
+
+def latest_commit_time() -> str:
+    """When the checked-out code was committed, or "unknown" without git."""
+    try:
+        return subprocess.run(
+            ["git", "log", "-1", "--format=%cd", "--date=format:%Y-%m-%d %H:%M %z"],
+            cwd=Path(__file__).resolve().parent,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
 
 
 def show_page(request: gr.Request):
@@ -49,4 +66,12 @@ def check_database() -> None:
 
 if __name__ == "__main__":
     check_database()
-    demo.launch(auth=check_login, auth_message="Employees: log in with your last name in lowercase.")
+    # The login page only takes a message, so CSS moves the commit time to the bottom.
+    footer = (
+        '<span style="position: fixed; bottom: 1rem; left: 0; right: 0; '
+        f'text-align: center; font-size: small">Latest commit: {latest_commit_time()}</span>'
+    )
+    demo.launch(
+        auth=check_login,
+        auth_message=f"Employees: log in with your last name in lowercase.{footer}",
+    )
