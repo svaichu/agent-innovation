@@ -51,9 +51,15 @@ def to_text(content) -> str:
     return "".join(part["text"] for part in content if part.get("type") == "text")
 
 
+def check_message(message: str):
+    """Reject a blank message before it reaches the chat."""
+    return gr.validate(bool(message.strip()), "Please describe your idea.")
+
+
 async def respond(message: str, history: list[dict]):
     """Stream the agent's reply. Also yields the draft and the submit button state."""
     hidden = gr.update(visible=False)
+    # The chat box validates first, but the API calls this function directly.
     if not message.strip():
         yield "Please describe your idea.", None, hidden
         return
@@ -116,6 +122,7 @@ def build() -> None:
         fn=respond,
         textbox=gr.Textbox(placeholder="Type your idea here...", submit_btn=True),
         additional_outputs=[draft, submit_button],
+        validator=check_message,
     )
     submit_button.render()
 
