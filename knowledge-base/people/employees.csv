@@ -1,0 +1,26 @@
+id,name,email,role,department,manager_id,work_mode,start_date,skills,responsibilities,deputy_id
+E01,Katharina Vogel,katharina.vogel@brambleworks.example,CEO & Co-founder,management,,hybrid,2019-03-01,Strategy; fundraising; key accounts,"Company strategy, final approvals, top accounts",E02
+E02,Jonas Adler,jonas.adler@brambleworks.example,CTO & Co-founder,management,E01,hybrid,2019-03-01,Architecture; embedded systems; security,"Technology strategy, security, architecture decisions",E01
+E03,Priya Raman,priya.raman@brambleworks.example,Product Manager,engineering,E02,hybrid,2021-02-01,Roadmapping; user research,"Product roadmap, release scope",E02
+E04,Lukas Brandt,lukas.brandt@brambleworks.example,Hardware Lead,engineering,E02,office,2019-09-01,PCB design; certification,"Sensor hardware, CE and radio certification",E05
+E05,Mei Tanaka,mei.tanaka@brambleworks.example,Hardware Engineer,engineering,E04,office,2022-05-01,Sensor calibration; test rigs,"Calibration procedure, test equipment",E04
+E06,Tomasz Nowak,tomasz.nowak@brambleworks.example,Firmware Engineer,engineering,E02,hybrid,2020-11-01,C; LoRaWAN; over-the-air updates,Sensor and gateway firmware,E07
+E07,Aylin Demir,aylin.demir@brambleworks.example,Backend Developer,engineering,E02,hybrid,2021-08-01,Python; PostgreSQL; AWS,"Canopy backend, public API",E09
+E08,Felix Hartmann,felix.hartmann@brambleworks.example,Frontend Developer,engineering,E02,remote,2023-01-15,TypeScript; React; accessibility,Canopy web dashboard,E07
+E09,David Okafor,david.okafor@brambleworks.example,DevOps & IT Administrator,engineering,E02,hybrid,2022-10-01,AWS; monitoring; identity management,"Cloud operations, internal IT, accounts and devices",E07
+E10,Marco Rossi,marco.rossi@brambleworks.example,Head of Sales,sales,E01,hybrid,2020-04-01,B2B sales; public tenders,"Pipeline, forecast, discount approvals",E11
+E11,Sophie Lemaire,sophie.lemaire@brambleworks.example,"Account Executive, Education",sales,E10,remote,2022-03-01,Schools and municipalities; tenders,Education and public sector accounts,E12
+E12,Ben Schuster,ben.schuster@brambleworks.example,"Account Executive, Offices & Industry",sales,E10,hybrid,2023-06-01,Facility managers; resellers,Commercial and reseller accounts,E11
+E13,Nia Mensah,nia.mensah@brambleworks.example,Sales Development Representative,sales,E10,office,2025-02-01,Outreach; lead qualification,Inbound lead qualification,E12
+E14,Clara Winkler,clara.winkler@brambleworks.example,Marketing Lead,marketing,E01,hybrid,2021-05-01,Positioning; campaigns; events,"Brand, campaigns, marketing budget",E15
+E15,Omar Haddad,omar.haddad@brambleworks.example,Content & Web Specialist,marketing,E14,remote,2024-04-01,Copywriting; SEO; web,"Website, newsletter, case studies",E14
+E16,Hannah Fischer,hannah.fischer@brambleworks.example,Head of Customer Success,support,E01,hybrid,2020-08-01,Onboarding; retention,"Customer onboarding, renewals, escalations",E17
+E17,Luis Ortega,luis.ortega@brambleworks.example,Support Specialist,support,E16,office,2022-01-10,Troubleshooting; knowledge articles,"Ticket queue, help centre articles",E18
+E18,Emilia Kowalski,emilia.kowalski@brambleworks.example,Support Specialist,support,E16,hybrid,2024-09-01,Troubleshooting; training webinars,"Ticket queue, customer training, returns intake",E17
+E19,Stefan Krüger,stefan.krueger@brambleworks.example,Field Installation Technician,support,E16,field,2023-03-01,Site surveys; installation,On-site installation and site surveys,E22
+E20,Ingrid Solberg,ingrid.solberg@brambleworks.example,Head of Operations,operations,E01,office,2020-01-15,Supply chain; quality management,"Production, inventory, suppliers",E21
+E21,Ravi Iyer,ravi.iyer@brambleworks.example,Procurement & Logistics Coordinator,operations,E20,office,2023-09-01,Purchasing; shipping; customs,"Purchase orders, stock, shipping",E20
+E22,Paul Becker,paul.becker@brambleworks.example,Assembly & Quality Technician,operations,E20,office,2021-11-01,Assembly; end-of-line test; repair,"Assembly, final test, repairs",E20
+E23,Miriam Scholz,miriam.scholz@brambleworks.example,Finance & Administration Lead,finance-people,E01,hybrid,2020-06-01,Controlling; contracts,"Budget, monthly close, contracts, data protection coordination",E24
+E24,Jan Peters,jan.peters@brambleworks.example,Accountant,finance-people,E23,office,2024-01-08,Bookkeeping; payroll preparation,"Invoicing, payables, expenses",E23
+E25,Fatima El-Amrani,fatima.el-amrani@brambleworks.example,People & Culture Generalist,finance-people,E23,hybrid,2023-11-01,Recruiting; onboarding; labour law basics,"Hiring, onboarding, leave, training",E23

@@ -1,0 +1,9 @@
+id,name,segment,owner_id,subscribed_sensors,plan,arr_eur,renewal_date,status
+C001,Städtische Schulen Musterstadt,Education,E11,2100,Standard,90720,2027-07-31,healthy
+C002,Nordkai Office Park,Commercial,E12,850,Pro,71400,2027-03-31,healthy
+C003,Gemeinde Beispielfeld,Public,E11,620,Standard,29760,2026-12-31,renewal open
+C004,Hollander Campus Groep,Education,E11,1300,Pro,98280,2027-08-31,healthy
+C005,Ferrum Components,Industry,E12,340,Pro,28560,2027-01-31,at risk: gateway outages
+C006,Alpenblick Kliniken,Healthcare,E12,480,Pro,40320,2027-05-31,healthy
+C007,Kantoorhuis Delta,Commercial,E12,260,Standard,12480,2027-02-28,low usage
+C008,Lindenhof Schulverbund,Education,E11,410,Standard,17712,2027-09-30,healthy
