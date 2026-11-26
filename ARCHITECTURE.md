@@ -36,7 +36,7 @@ flowchart LR
 | Agent: Intake | Turns the conversation into one raw idea, confirmed by the employee | Knowledge base | RawIdea |
 | Agent: Merge | Finds related raw ideas and combines them into a refined idea | RawIdea, RefinedIdea, knowledge base | RefinedIdea |
 | Agent: Score | Applies the metric to one idea at a time | Idea, metric, knowledge base | Score |
-| Idea store | Holds ideas, merge links and scores | - | - |
+| Idea store | Holds ideas, merge links and scores. Raw ideas are files in `knowledge-base/ideas/raw/`, apart from company content | - | - |
 | Knowledge base | Company context | - | - |
 | Metric skill file | Defines how ideas are judged | - | - |
 | Dashboard | Lists raw and refined ideas, ranked by score | Idea store | - |

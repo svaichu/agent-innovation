@@ -72,3 +72,6 @@ Brambleworks GmbH makes indoor air-quality sensors and monitoring software. 25 e
 ## Projects
 - [Active projects](projects/active-projects.md)
 - [Decision log](projects/decision-log.md)
+
+## Employee ideas (unreviewed, not company facts)
+- [Employee ideas](ideas/README.md)
