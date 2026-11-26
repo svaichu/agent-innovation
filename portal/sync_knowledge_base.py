@@ -1,7 +1,7 @@
 """Copy the local knowledge base to Postgres. One way: local files win.
 
-    .venv/bin/python employee_interface/sync_knowledge_base.py --dry-run
-    .venv/bin/python employee_interface/sync_knowledge_base.py
+    .venv/bin/python portal/sync_knowledge_base.py --dry-run
+    .venv/bin/python portal/sync_knowledge_base.py
 
 Documents removed locally are removed from the database, and the employee table
 is replaced by people/employees.csv. Only the knowledge_base schema is written;

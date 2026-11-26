@@ -1,7 +1,9 @@
 """Raw ideas, stored as app-generated data, apart from the company knowledge base."""
 
+from datetime import datetime
 from typing import Literal
 
+from psycopg.rows import class_row
 from pydantic import BaseModel
 
 from db import connect
@@ -49,3 +51,31 @@ def save_raw_idea(draft: IdeaDraft, author_id: str) -> str:
             (idea_id, author_id, to_markdown(draft)),
         )
     return idea_id
+
+
+class RawIdea(BaseModel):
+    """A stored idea. The name and department are None if the author is unknown."""
+
+    id: str
+    text: str
+    created_at: datetime
+    author_id: str
+    author_name: str | None
+    department: str | None
+
+
+def list_raw_ideas() -> list[RawIdea]:
+    """Every raw idea with its author, newest first."""
+    with connect() as connection:
+        return (
+            connection.cursor(row_factory=class_row(RawIdea))
+            .execute(
+                "SELECT idea.id, idea.text, idea.created_at, idea.author_id, "
+                "employee.name AS author_name, employee.department "
+                "FROM app_generated.raw_idea AS idea "
+                "LEFT JOIN knowledge_base.employees AS employee "
+                "ON employee.id = idea.author_id "
+                "ORDER BY idea.created_at DESC, idea.id DESC"
+            )
+            .fetchall()
+        )

@@ -37,9 +37,9 @@ flowchart LR
 | Agent: Merge | Finds related raw ideas and combines them into a refined idea | RawIdea, RefinedIdea, knowledge base | RefinedIdea |
 | Agent: Score | Applies the metric to one idea at a time | Idea, metric, knowledge base | Score |
 | Idea store | Holds ideas, merge links and scores. App-generated data, in the Postgres schema `app_generated` | - | - |
-| Knowledge base | Company context. Edited in `knowledge-base/`, copied to Postgres with `employee_interface/sync_knowledge_base.py` | - | - |
+| Knowledge base | Company context. Edited in `knowledge-base/`, copied to Postgres with `portal/sync_knowledge_base.py` | - | - |
 | Metric skill file | Defines how ideas are judged | - | - |
-| Dashboard | Lists raw and refined ideas, ranked by score | Idea store | - |
+| Dashboard | Lists raw and refined ideas, ranked by score. So far: raw ideas and who proposed them | Idea store | - |
 
 ## 3. Data model
 

@@ -2,46 +2,20 @@
 
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 
 import gradio as gr
 import psycopg
+import yaml
 from agents import Agent, RunContextWrapper, Runner, function_tool
 from openai.types.responses import ResponseTextDeltaEvent
 
-from auth import check_login, find_employee
-from db import connect, create_tables
+from auth import find_employee
 from idea_store import IdeaDraft, save_raw_idea, to_markdown
 
-INSTRUCTIONS = """\
-You are the intake agent of an internal idea evaluation system. You collect ideas
-on how a company process, or the employee's own workflow, can be improved.
-
-Before an idea can be submitted you need all of this:
-- scope: a company process, or the employee's own workflow
-- the current process: how it works today
-- the problem with it
-- the proposed improvement
-- who is affected
-- the expected benefit, for example time saved or fewer errors
-
-Rules:
-- Check what the employee has already said, then ask for what is missing or too
-  vague to understand. Ask one short question at a time.
-- Use only what the employee said. Never invent or embellish details. If they do
-  not know something after being asked, record it as unknown.
-- If an idea is not about improving a process or workflow, say that this is what
-  is being collected and ask which process it would improve.
-- Ask the employee to leave out personal data about colleagues or customers and
-  confidential details, and never put them in a draft.
-- Do not score or judge the idea.
-- When nothing is missing, call propose_idea. The draft is then shown below your
-  reply, so do not repeat it. Ask the employee to check it and press "Submit
-  idea", or to say what to change.
-- You cannot submit ideas yourself. Only the button stores them. Call
-  propose_idea again after any change, or if the employee confirms in the chat,
-  so that the draft and button are shown.
-- Reply and write the draft in the employee's language.
-"""
+PORTAL_DIR = Path(__file__).resolve().parent
+INSTRUCTIONS = (PORTAL_DIR / "intake_prompt.md").read_text(encoding="utf-8")
+CONFIG = yaml.safe_load((PORTAL_DIR / "config.yaml").read_text(encoding="utf-8"))
 
 
 @dataclass
@@ -62,9 +36,11 @@ def propose_idea(context: RunContextWrapper[IntakeContext], draft: IdeaDraft) ->
     return "The draft is shown below your reply. It is not stored yet."
 
 
-# No model is set, so the SDK default applies (override: OPENAI_DEFAULT_MODEL).
 intake_agent = Agent[IntakeContext](
-    name="Intake", instructions=INSTRUCTIONS, tools=[propose_idea]
+    name="Intake",
+    instructions=INSTRUCTIONS,
+    model=CONFIG["models"]["intake_agent"],
+    tools=[propose_idea],
 )
 
 
@@ -104,12 +80,6 @@ async def respond(message: str, history: list[dict]):
         yield reply, context.draft, gr.update(visible=True)
 
 
-def signed_in_as(request: gr.Request) -> str:
-    if not (employee := find_employee(request.username or "")):
-        return "Signed in as **unknown**"
-    return f"Signed in as **{employee['name']}** ({employee['id']})"
-
-
 def submit_idea(draft: IdeaDraft | None, history: list[dict], request: gr.Request):
     """Store the draft the employee is looking at. Runs only on the button."""
     unchanged = (gr.skip(), gr.skip(), gr.skip(), gr.skip())
@@ -131,16 +101,13 @@ def submit_idea(draft: IdeaDraft | None, history: list[dict], request: gr.Reques
     return history, history, None, gr.update(visible=False)
 
 
-with gr.Blocks(title="Employee Interface", fill_height=True) as demo:
+def build() -> None:
+    """Add the employee page to the page being built."""
     gr.Markdown(
         "# Employee Interface\n"
         "How could a company process or your own workflow be improved? "
         "The assistant asks for anything missing before you submit."
     )
-    with gr.Row(equal_height=True):
-        user_label = gr.Markdown()
-        gr.Button("Log out", link="/logout?all_session=false", size="sm", scale=0)
-    demo.load(signed_in_as, outputs=user_label)
     draft = gr.State(None)
     submit_button = gr.Button(
         "Submit idea", variant="primary", visible=False, render=False
@@ -163,15 +130,3 @@ with gr.Blocks(title="Employee Interface", fill_height=True) as demo:
         chat_event(
             lambda: (None, gr.update(visible=False)), outputs=[draft, submit_button]
         )
-
-def check_database() -> None:
-    """Fail at startup, not at the first login, if the database is not ready."""
-    with connect() as connection:
-        create_tables(connection)
-        if not connection.execute("SELECT 1 FROM knowledge_base.employees LIMIT 1").fetchone():
-            raise SystemExit("No employees in the database. Run sync_knowledge_base.py.")
-
-
-if __name__ == "__main__":
-    check_database()
-    demo.launch(auth=check_login, auth_message="Log in with your last name.")
