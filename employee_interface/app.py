@@ -6,8 +6,8 @@ import gradio as gr
 from agents import Agent, RunContextWrapper, Runner, function_tool
 from openai.types.responses import ResponseTextDeltaEvent
 
-from auth import check_login, normalize_id
-from idea_store import IdeaDraft, employee_name, save_raw_idea, to_markdown
+from auth import check_login, find_employee
+from idea_store import IdeaDraft, save_raw_idea, to_markdown
 
 INSTRUCTIONS = """\
 You are the intake agent of an internal idea evaluation system. You collect ideas
@@ -102,8 +102,9 @@ async def respond(message: str, history: list[dict]):
 
 
 def signed_in_as(request: gr.Request) -> str:
-    employee_id = normalize_id(request.username or "")
-    return f"Signed in as **{employee_name(employee_id) or 'unknown'}** ({employee_id})"
+    if not (employee := find_employee(request.username or "")):
+        return "Signed in as **unknown**"
+    return f"Signed in as **{employee['name']}** ({employee['id']})"
 
 
 def submit_idea(draft: IdeaDraft | None, history: list[dict], request: gr.Request):
@@ -112,12 +113,11 @@ def submit_idea(draft: IdeaDraft | None, history: list[dict], request: gr.Reques
     if draft is None:
         return unchanged
     # The author is whoever logged in; the employee cannot choose it.
-    employee_id = normalize_id(request.username or "")
-    if not employee_name(employee_id):
+    if not (employee := find_employee(request.username or "")):
         gr.Warning("Your login does not match an employee, so nothing was submitted.")
         return unchanged
 
-    idea_id = save_raw_idea(draft, author_id=employee_id)
+    idea_id = save_raw_idea(draft, author_id=employee["id"])
     confirmation = f"Your idea has been submitted as **{idea_id}**. Thank you!"
     history = history + [{"role": "assistant", "content": confirmation}]
     return history, history, None, gr.update(visible=False)
@@ -157,4 +157,4 @@ with gr.Blocks(title="Employee Interface", fill_height=True) as demo:
         )
 
 if __name__ == "__main__":
-    demo.launch(auth=check_login, auth_message="Log in with your employee ID.")
+    demo.launch(auth=check_login, auth_message="Log in with your last name.")

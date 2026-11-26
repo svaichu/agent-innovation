@@ -1,6 +1,5 @@
 """Raw ideas, stored in the knowledge base but apart from the company content."""
 
-import csv
 import json
 import re
 from datetime import datetime
@@ -28,15 +27,6 @@ class IdeaDraft(BaseModel):
 
     def missing_fields(self) -> list[str]:
         return [name for name, value in self if not value.strip()]
-
-
-def employee_name(employee_id: str) -> str | None:
-    """The employee's name, or None if the ID is not in the employee list."""
-    with EMPLOYEES_CSV.open(newline="", encoding="utf-8") as file:
-        return next(
-            (row["name"] for row in csv.DictReader(file) if row["id"] == employee_id),
-            None,
-        )
 
 
 def to_markdown(draft: IdeaDraft) -> str:
