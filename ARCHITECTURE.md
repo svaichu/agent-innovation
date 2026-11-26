@@ -36,12 +36,21 @@ flowchart LR
 | Agent: Intake | Turns the conversation into one raw idea, confirmed by the employee | Knowledge base | RawIdea |
 | Agent: Merge | Finds related raw ideas and combines them into a refined idea | RawIdea, RefinedIdea, knowledge base | RefinedIdea |
 | Agent: Score | Applies the metric to one idea at a time | Idea, metric, knowledge base | Score |
-| Idea store | Holds ideas, merge links and scores. Raw ideas are files in `knowledge-base/ideas/raw/`, apart from company content | - | - |
-| Knowledge base | Company context | - | - |
+| Idea store | Holds ideas, merge links and scores. App-generated data, in the Postgres schema `app_generated` | - | - |
+| Knowledge base | Company context. Edited in `knowledge-base/`, copied to Postgres with `employee_interface/sync_knowledge_base.py` | - | - |
 | Metric skill file | Defines how ideas are judged | - | - |
 | Dashboard | Lists raw and refined ideas, ranked by score | Idea store | - |
 
 ## 3. Data model
+
+Company information and app-generated data are kept apart:
+
+| Postgres schema | Contains | Source of truth |
+|---|---|---|
+| `knowledge_base` | Company information: `documents`, `employees` | Files in `knowledge-base/`, copied with the sync script |
+| `app_generated` | Everything the app creates: `raw_idea`, later `refined_idea` | The database only |
+
+The knowledge base never contains app-generated data.
 
 ```
 RawIdea      { id, author_id, text, created_at }

@@ -1,12 +1,15 @@
 """Employee Interface: employees describe an idea in a chat with the intake agent."""
 
+import logging
 from dataclasses import dataclass
 
 import gradio as gr
+import psycopg
 from agents import Agent, RunContextWrapper, Runner, function_tool
 from openai.types.responses import ResponseTextDeltaEvent
 
 from auth import check_login, find_employee
+from db import connect, create_tables
 from idea_store import IdeaDraft, save_raw_idea, to_markdown
 
 INSTRUCTIONS = """\
@@ -117,7 +120,12 @@ def submit_idea(draft: IdeaDraft | None, history: list[dict], request: gr.Reques
         gr.Warning("Your login does not match an employee, so nothing was submitted.")
         return unchanged
 
-    idea_id = save_raw_idea(draft, author_id=employee["id"])
+    try:
+        idea_id = save_raw_idea(draft, author_id=employee["id"])
+    except psycopg.Error:
+        logging.exception("Could not save an idea")
+        gr.Warning("The idea could not be saved. Please try again in a moment.")
+        return unchanged
     confirmation = f"Your idea has been submitted as **{idea_id}**. Thank you!"
     history = history + [{"role": "assistant", "content": confirmation}]
     return history, history, None, gr.update(visible=False)
@@ -156,5 +164,14 @@ with gr.Blocks(title="Employee Interface", fill_height=True) as demo:
             lambda: (None, gr.update(visible=False)), outputs=[draft, submit_button]
         )
 
+def check_database() -> None:
+    """Fail at startup, not at the first login, if the database is not ready."""
+    with connect() as connection:
+        create_tables(connection)
+        if not connection.execute("SELECT 1 FROM knowledge_base.employees LIMIT 1").fetchone():
+            raise SystemExit("No employees in the database. Run sync_knowledge_base.py.")
+
+
 if __name__ == "__main__":
+    check_database()
     demo.launch(auth=check_login, auth_message="Log in with your last name.")

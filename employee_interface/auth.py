@@ -1,14 +1,14 @@
 """Simple login for a few employees. Passwords are stored in plain text.
 
-The username is the employee's last name. users.csv (not in the repository) maps
-employee IDs to passwords.
+The username is the employee's last name, from the knowledge base.
+users.csv (not in the repository) maps employee IDs to passwords.
 """
 
 import csv
 import hmac
 from pathlib import Path
 
-from idea_store import EMPLOYEES_CSV
+from db import connect
 
 USERS_CSV = Path(__file__).resolve().parent / "users.csv"
 
@@ -16,12 +16,15 @@ USERS_CSV = Path(__file__).resolve().parent / "users.csv"
 def find_employee(username: str) -> dict[str, str] | None:
     """The employee with this last name, or None if nobody or several have it."""
     wanted = username.strip().casefold()
-    with EMPLOYEES_CSV.open(newline="", encoding="utf-8") as file:
-        matches = [
-            row
-            for row in csv.DictReader(file)
-            if row["name"].split()[-1].casefold() == wanted
-        ]
+    with connect() as connection:
+        rows = connection.execute(
+            "SELECT id, name FROM knowledge_base.employees"
+        ).fetchall()
+    matches = [
+        {"id": employee_id, "name": name}
+        for employee_id, name in rows
+        if name.split()[-1].casefold() == wanted
+    ]
     return matches[0] if len(matches) == 1 else None
 
 
