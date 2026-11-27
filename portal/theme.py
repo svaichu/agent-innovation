@@ -157,7 +157,7 @@ footer {{ display: none !important; }}
 /* the five columns every row shares */
 .it-head, .idea-table summary {{
   display: grid;
-  grid-template-columns: 86px minmax(0, 1fr) 160px 132px 104px;
+  grid-template-columns: 82px minmax(0, 1fr) 86px 150px 124px 100px;
   gap: 14px; align-items: center;
   padding: 10px 16px;
 }}
@@ -208,6 +208,31 @@ footer {{ display: none !important; }}
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }}
 .it-dept {{ text-transform: capitalize; }}
+
+/* the score column, and the score block inside an opened row */
+.it-score {{
+  display: inline-block; min-width: 42px; text-align: center;
+  font-size: 12px; font-weight: 650; padding: 2px 8px; border-radius: 20px;
+  border: 1px solid var(--border-color-primary);
+}}
+.it-value {{ background: {EMBER}; border-color: {EMBER}; color: #fff; }}
+.it-needs, .it-pending {{
+  color: var(--body-text-color-subdued); font-weight: 550; font-size: 11px;
+}}
+.it-badges {{ margin: 2px 0 12px !important; line-height: 2.1; }}
+.it-why {{ margin: 0 0 14px; }}
+.it-why > summary {{
+  cursor: pointer; list-style: none; display: inline-block;
+  font-size: 12px; font-weight: 650; color: {EMBER};
+  border-bottom: 1px dotted {EMBER}; padding-bottom: 1px;
+}}
+.it-why > summary::-webkit-details-marker {{ display: none; }}
+.it-reasons {{
+  margin: 10px 0 0; padding-left: 18px;
+  font-size: 12.5px; line-height: 1.7; color: var(--body-text-color-subdued);
+}}
+.it-reasons li.lv1 {{ margin-left: 16px; list-style-type: circle; opacity: 0.85; }}
+.it-reasons strong {{ color: var(--body-text-color); }}
 .it-rev {{
   display: inline-block; margin-left: 8px; padding: 1px 7px;
   border: 1px solid {EMBER}; color: {EMBER};
@@ -238,6 +263,10 @@ footer {{ display: none !important; }}
   margin: 16px 0 0 !important; padding-top: 11px;
   border-top: 1px solid var(--border-color-primary);
   font-size: 11.5px; color: var(--body-text-color-subdued);
+.badge-score {{ background: {EMBER}; border-color: {EMBER}; color: #fff; }}
+.badge-review {{ border-color: {EMBER}; color: {EMBER}; }}
+.idea-score .prose p {{ margin: 9px 0 0 !important; line-height: 2; }}
+#ranking-note .prose p {{
 }}
 
 /* ---------- empty state ---------- */
@@ -251,9 +280,10 @@ footer {{ display: none !important; }}
 
 /* narrow screens: drop the columns that repeat inside the open row */
 @media (max-width: 860px) {{
-  .it-head, .idea-table summary {{ grid-template-columns: 76px minmax(0,1fr) 92px; }}
-  .it-head span:nth-child(3), .it-author,
-  .it-head span:nth-child(4), .it-dept {{ display: none; }}
+  .it-head, .idea-table summary {{ grid-template-columns: 72px minmax(0,1fr) 72px; }}
+  .it-head span:nth-child(4), .it-author,
+  .it-head span:nth-child(5), .it-dept,
+  .it-head span:nth-child(6), .it-date {{ display: none; }}
   .it-body {{ padding-left: 20px; }}
   .it-field {{ grid-template-columns: 1fr; gap: 2px; }}
 }}

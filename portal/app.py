@@ -15,6 +15,7 @@ import employee_interface
 import innovation_dashboard
 from auth import check_login, find_employee, is_dashboard_user
 from db import connect, create_tables
+from score_ideas import load_setup
 from theme import CSS, THEME, login_message
 
 
@@ -71,6 +72,7 @@ def check_database() -> None:
 
 if __name__ == "__main__":
     check_database()
+    load_setup()  # Fail at startup if the metric or checks file is broken.
     # The login page is rendered separately and never sees `css`, so its styles
     # travel inside auth_message. See theme.login_message().
     demo.launch(

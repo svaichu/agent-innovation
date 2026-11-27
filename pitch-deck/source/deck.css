@@ -1,0 +1,39 @@
+section { background:#F6F4EE; color:#42536A; font-family:'Inter', Arial, sans-serif; padding:128px 128px 160px; display:flex; flex-direction:column; gap:48px; }
+h1, h2, h3 { font-family:'Space Grotesk', Arial, sans-serif; color:#12263A; }
+h1 { font-size:80px; line-height:1.1; font-weight:700; }
+h2 { font-size:56px; line-height:1.15; font-weight:700; }
+h3 { font-size:36px; line-height:1.2; font-weight:600; }
+p, li { font-size:28px; line-height:1.4; }
+ul { padding-left:32px; }
+li { margin-bottom:12px; }
+.eyebrow { font-size:24px; font-weight:600; color:#B63D0C; letter-spacing:2px; text-transform:uppercase; }
+.head { display:flex; flex-direction:column; gap:12px; }
+.row { display:flex; gap:32px; align-items:stretch; }
+.col { display:flex; flex-direction:column; gap:20px; }
+.card { flex:1; display:flex; flex-direction:column; gap:20px; background:#FFFDF8; border:2px solid #D9D3C5; border-radius:16px; padding:36px; }
+.card.strong { border:3px solid #B63D0C; }
+.footer { position:absolute; left:128px; bottom:64px; width:1664px; font-size:24px; line-height:1.3; color:#42536A; }
+
+.why { background:#12263A; color:#D5DEE8; flex-direction:row; gap:96px; align-items:center; }
+.why h1 { color:#F6F4EE; }
+.why .eyebrow { color:#FFA94D; }
+.why .lead { font-size:36px; }
+.why .left { width:940px; gap:36px; }
+.why .issues { flex:1; gap:48px; }
+.why .issue { display:flex; flex-direction:column; gap:12px; border-top:3px solid #FFA94D; padding:28px 0 0 0; }
+.why .issue h3 { color:#FFA94D; }
+.why .footer { color:#D5DEE8; }
+
+.how { gap:40px; }
+.how .card { gap:12px; padding:28px 36px; }
+.how .merge { display:flex; gap:32px; align-items:center; }
+.how .views { width:820px; display:flex; flex-direction:column; gap:12px; }
+.how .view { background:#EAE5D8; border-radius:12px; padding:16px 28px; color:#12263A; }
+.how .refined { flex:1; display:flex; flex-direction:column; gap:16px; background:#12263A; border-radius:16px; padding:44px 40px; }
+.how .refined h3 { color:#F6F4EE; }
+.how .refined p { color:#D5DEE8; }
+
+.tag { font-size:24px; font-weight:600; color:#B63D0C; }
+.bar { background:#12263A; border-radius:16px; padding:32px 40px; display:flex; flex-direction:column; gap:8px; }
+.bar h3 { color:#F6F4EE; }
+.bar p { color:#D5DEE8; }
