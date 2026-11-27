@@ -206,23 +206,32 @@ def submit_idea(proposal: Proposal | None, history: list[dict], request: gr.Requ
 
 def build() -> None:
     """Add the employee page to the page being built."""
+    with gr.Row(elem_classes="page-head"):
+        gr.Markdown("## Share an idea\nHow could a company process, or your "
+                    "own workflow, be improved? The assistant asks for "
+                    "anything missing, then shows you a draft. Nothing is "
+                    "stored until you press the button.")
     gr.Markdown(
-        "# Employee Interface\n"
-        "How could a company process or your own workflow be improved? "
-        "The assistant asks for anything missing before you submit. "
-        "You can also ask to see your submitted ideas and improve them."
-    )
+        "You can also ask to **see your submitted ideas** and improve one.",
+        elem_id="chat-hint")
     proposal = gr.State(None)
     submit_button = gr.Button(
         "Submit idea", variant="primary", visible=False, render=False
     )
     chat = gr.ChatInterface(
         fn=respond,
-        textbox=gr.Textbox(placeholder="Type your idea here...", submit_btn=True),
+        textbox=gr.Textbox(placeholder="Describe the problem in your own words...",
+                           submit_btn=True),
+        examples=[
+            "Answering public tenders takes us three days each",
+            "We retype order data from HubSpot into a spreadsheet every week",
+            "Show me the ideas I have already submitted",
+        ],
         additional_outputs=[proposal, submit_button],
         validator=check_message,
     )
-    submit_button.render()
+    with gr.Row(elem_id="submit-row"):
+        submit_button.render()
 
     # chatbot_state is the history ChatInterface passes to respond().
     submit_button.click(
