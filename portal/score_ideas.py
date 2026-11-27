@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import hashlib
 import logging
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -163,8 +164,13 @@ def score_idea(idea: RawIdea | RefinedIdea, setups: list[Setup]) -> None:
         raise errors[0]
 
 
-def score_ideas(idea_ids: list[str] | None = None, rescore: bool = False) -> tuple[int, int]:
-    """Give ideas the scores they lack. How many ideas succeeded and failed.
+def score_progress(
+    idea_ids: list[str] | None = None, rescore: bool = False
+) -> Iterator[tuple[int, int, int]]:
+    """Give ideas the scores they lack, one idea per step.
+
+    Yields how many ideas succeeded, failed and are to be scored in all: once
+    before the first idea, then after each one.
 
     Args:
         idea_ids: Only these ideas. All ideas if None.
@@ -176,13 +182,15 @@ def score_ideas(idea_ids: list[str] | None = None, rescore: bool = False) -> tup
         for setup in setups:
             metric = setup.metric
             done[metric.name] = set(current_scores(metric.name, metric.version, setup.sha))
-    succeeded = failed = 0
+    queue = []
     for idea in [*list_raw_ideas(), *list_refined_ideas()]:
         if idea_ids is not None and idea.id not in idea_ids:
             continue
-        pending = [s for s in setups if idea.id not in done.get(s.metric.name, ())]
-        if not pending:
-            continue
+        if pending := [s for s in setups if idea.id not in done.get(s.metric.name, ())]:
+            queue.append((idea, pending))
+    succeeded = failed = 0
+    yield succeeded, failed, len(queue)
+    for idea, pending in queue:
         try:
             score_idea(idea, pending)
             succeeded += 1
@@ -190,6 +198,12 @@ def score_ideas(idea_ids: list[str] | None = None, rescore: bool = False) -> tup
             # One idea that cannot be scored must not stop the others.
             logging.exception("Could not score %s", idea.id)
             failed += 1
+        yield succeeded, failed, len(queue)
+
+
+def score_ideas(idea_ids: list[str] | None = None, rescore: bool = False) -> tuple[int, int]:
+    """Run score_progress to the end. How many ideas succeeded and failed."""
+    *_, (succeeded, failed, _) = score_progress(idea_ids, rescore)
     return succeeded, failed
 
 

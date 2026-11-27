@@ -11,6 +11,7 @@ Access is checked in show_ideas() on every call, not by hiding the page.
 """
 
 import logging
+from collections.abc import Iterator
 
 import gradio as gr
 import psycopg
@@ -20,13 +21,15 @@ from dashboard_table import Column, raw_row, refined_row, table_html, tiles_html
 from idea_store import RawIdea, list_raw_ideas
 from merge_ideas import merge_ideas
 from refined_store import RefinedIdea, list_refined_ideas
-from score_ideas import Setup, load_setups, score_ideas
+from score_ideas import Setup, load_setups, score_progress
 from score_store import Score, current_scores
 
 ALL = "All departments"
 # A ranking by a metric has the value "score:<metric name>".
 BY_SCORE = "score:"
 OTHER_SORTS = ["Newest first", "Oldest first", "Department", "Author"]
+SCORE_LABEL = "Score pending ideas"
+MERGE_LABEL = "Merge related ideas"
 
 
 def matches(idea: RawIdea, query: str, department: str) -> bool:
@@ -205,29 +208,43 @@ def merge_related(request: gr.Request) -> None:
         gr.Info(merge_summary(created, updated))
 
 
-def score_and_report(refined_only: bool = False) -> None:
-    """Score pending ideas, and warn about those that failed."""
+def score_and_report(refined_only: bool = False) -> Iterator[dict]:
+    """Score pending ideas, and report how it went.
+
+    Yields button updates that show which idea is being scored.
+    """
+    succeeded = failed = 0
     try:
         ids = [item.id for item in list_refined_ideas()] if refined_only else None
-        _, failed = score_ideas(ids)
-    except (psycopg.Error, ValueError, OSError):
+        for succeeded, failed, total in score_progress(ids):
+            if (current := succeeded + failed + 1) <= total:
+                yield gr.update(value=f"Scoring {current} of {total}…")
+    except Exception:
+        # The page has to stay usable, whatever went wrong.
         logging.exception("Could not score the ideas")
         gr.Warning("The ideas could not be scored. Please try again in a moment.")
-    else:
-        if failed:
-            gr.Warning(f"{failed} ideas could not be scored. The log says why.")
+        return
+    if failed:
+        gr.Warning(f"{failed} ideas could not be scored. The log says why.")
+    # After a merge, the merge has already reported what happened.
+    if not refined_only:
+        gr.Info(f"Ideas scored: {succeeded}." if succeeded or failed
+                else "No ideas are awaiting a score.")
 
 
-def score_pending(request: gr.Request) -> None:
+def score_pending(request: gr.Request) -> Iterator[dict]:
     """Score every pending idea, raw and refined."""
+    # A generator has to yield at least once, also when there is nothing to do.
+    yield gr.skip()
     if is_dashboard_user(request.username or ""):
-        score_and_report()
+        yield from score_and_report()
 
 
-def score_refined(request: gr.Request) -> None:
+def score_refined(request: gr.Request) -> Iterator[dict]:
     """Score the refined ideas that have no current score."""
+    yield gr.skip()
     if is_dashboard_user(request.username or ""):
-        score_and_report(refined_only=True)
+        yield from score_and_report(refined_only=True)
 
 
 # --------------------------------------------------------------------------- #
@@ -271,9 +288,8 @@ def build(demo: gr.Blocks) -> None:
 
     with gr.Row(equal_height=True):
         ranking = gr.Markdown(elem_id="ranking-note", scale=4)
-        score_button = gr.Button("Score pending ideas", size="sm", scale=0,
-                                 min_width=180)
-        merge_button = gr.Button("Merge related ideas", size="sm", scale=0,
+        score_button = gr.Button(SCORE_LABEL, size="sm", scale=0, min_width=180)
+        merge_button = gr.Button(MERGE_LABEL, size="sm", scale=0,
                                  min_width=180, variant="primary")
 
     with gr.Tabs():
@@ -329,17 +345,31 @@ def build(demo: gr.Blocks) -> None:
     outputs = [ideas_state, refined_state, scores_state, columns_state, ranking,
                department, error, tiles]
     gr.on([demo.load, refresh.click], refresh_all, outputs=outputs)
-    score_button.click(score_pending).then(refresh_all, outputs=outputs)
-    # Merging and scoring take a while, so the button says which is running and
-    # cannot be pressed twice. The refined ideas show up before their scores.
+    # Merging and scoring take minutes. The pressed button says what is running,
+    # and neither can be pressed until it is done.
+    buttons = [score_button, merge_button]
+    # Shared by both jobs, so only one runs at a time, also across open pages.
+    job = {"concurrency_id": "agent-job", "concurrency_limit": 1}
+
+    def busy(score_label: str, merge_label: str):
+        return (gr.update(value=score_label, interactive=False),
+                gr.update(value=merge_label, interactive=False))
+
+    def idle():
+        return (gr.update(value=SCORE_LABEL, interactive=True),
+                gr.update(value=MERGE_LABEL, interactive=True))
+
+    score_button.click(
+        lambda: busy("Scoring…", MERGE_LABEL), outputs=buttons
+    ).then(
+        score_pending, outputs=score_button, show_progress="hidden", **job
+    ).then(refresh_all, outputs=outputs).then(idle, outputs=buttons)
+    # The refined ideas show up before their scores.
     merge_button.click(
-        lambda: gr.update(value="Merging…", interactive=False), outputs=merge_button
-    ).then(merge_related).then(refresh_all, outputs=outputs).then(
-        lambda: gr.update(value="Scoring…"), outputs=merge_button
-    ).then(score_refined).then(refresh_all, outputs=outputs).then(
-        lambda: gr.update(value="Merge related ideas", interactive=True),
-        outputs=merge_button,
-    )
+        lambda: busy(SCORE_LABEL, "Merging…"), outputs=buttons
+    ).then(merge_related, **job).then(refresh_all, outputs=outputs).then(
+        score_refined, outputs=merge_button, show_progress="hidden", **job
+    ).then(refresh_all, outputs=outputs).then(idle, outputs=buttons)
 
     # The count line is cheap to recompute, so it follows every filter change.
     def update_count(ideas, text, dept):
