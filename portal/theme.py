@@ -142,55 +142,121 @@ footer {{ display: none !important; }}
   color: var(--body-text-color-subdued);
 }}
 
-/* ---------- idea cards: one surface, orange edge attached ---------- */
-.idea-card {{
-  background: var(--background-fill-secondary) !important;
-  border: 1px solid var(--border-color-primary) !important;
-  border-left: 3px solid {EMBER} !important;
-  border-radius: 3px 11px 11px 3px !important;
-  padding: 16px 20px !important;
-  margin-bottom: 12px !important;
-  overflow: hidden;
-}}
-.idea-card .prose h3 {{
-  font-size: 16.5px !important; margin: 7px 0 3px !important;
-  letter-spacing: -0.3px; font-weight: 620;
-}}
-.idea-card .prose h4 {{
-  font-size: 10.5px !important; text-transform: uppercase; letter-spacing: 0.9px;
-  color: {EMBER}; margin: 14px 0 2px !important; font-weight: 650;
-}}
-.idea-card .prose p {{ margin: 3px 0 !important; font-size: 13.5px; line-height: 1.65; }}
-.idea-meta .prose p {{
-  margin: 0 !important; font-size: 12.5px;
+/* ---------- idea table: one row per idea, opens in place ---------- */
+#idea-table-wrap {{ margin-top: 2px; }}
+.it-count {{
+  margin: 14px 2px 10px !important; font-size: 12.5px;
   color: var(--body-text-color-subdued);
 }}
-/* the accordion is part of the card, not a panel sitting on it */
-.idea-card .label-wrap {{
-  padding: 10px 0 0 !important;
-  border-top: 1px solid var(--border-color-primary);
-  margin-top: 13px;
-  font-size: 13px; font-weight: 600; color: {EMBER};
-}}
-.badge {{
-  display: inline-block; font-size: 10px; font-weight: 650;
-  padding: 2px 8px; border-radius: 20px; margin-right: 6px;
-  letter-spacing: 0.4px;
+.idea-table {{
   border: 1px solid var(--border-color-primary);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--background-fill-secondary);
+}}
+/* the five columns every row shares */
+.it-head, .idea-table summary {{
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr) 160px 132px 104px;
+  gap: 14px; align-items: center;
+  padding: 10px 16px;
+}}
+.it-head {{
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.9px;
+  font-weight: 650; color: var(--body-text-color-subdued);
+  border-bottom: 1px solid var(--border-color-primary);
+  background: var(--block-background-fill);
+}}
+
+.it-row {{ border-bottom: 1px solid var(--border-color-primary); }}
+.it-row:last-child {{ border-bottom: none; }}
+.idea-table summary {{
+  cursor: pointer; list-style: none; position: relative;
+  border-left: 3px solid transparent; padding-left: 13px;
+  transition: background 0.12s, border-color 0.12s;
+}}
+.idea-table summary::-webkit-details-marker {{ display: none; }}
+.idea-table summary:hover {{ background: var(--block-background-fill); }}
+.it-row[open] > summary {{
+  background: var(--block-background-fill);
+  border-left-color: {EMBER};
+}}
+/* chevron, drawn in CSS so the row needs no icon font */
+.idea-table summary::after {{
+  content: ""; position: absolute; right: 16px; top: 50%;
+  width: 6px; height: 6px; margin-top: -4px;
+  border-right: 1.6px solid var(--body-text-color-subdued);
+  border-bottom: 1.6px solid var(--body-text-color-subdued);
+  transform: rotate(45deg); transition: transform 0.15s;
+}}
+.it-row[open] > summary::after {{
+  transform: rotate(-135deg); margin-top: -1px;
+  border-color: {EMBER};
+}}
+
+.it-id {{
+  font-family: var(--font-mono); font-size: 11.5px;
   color: var(--body-text-color-subdued);
 }}
-.badge-id {{ font-family: var(--font-mono); }}
-.badge-rev {{ border-color: {EMBER}; color: {EMBER}; }}
+.it-title {{
+  font-size: 14px; font-weight: 550; color: var(--body-text-color);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding-right: 18px;
+}}
+.it-author, .it-dept, .it-date {{
+  font-size: 12.5px; color: var(--body-text-color-subdued);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}}
+.it-dept {{ text-transform: capitalize; }}
+.it-rev {{
+  display: inline-block; margin-left: 8px; padding: 1px 7px;
+  border: 1px solid {EMBER}; color: {EMBER};
+  border-radius: 20px; font-size: 10px; font-weight: 650;
+  vertical-align: middle;
+}}
+
+/* ---------- the opened row ---------- */
+.it-body {{
+  padding: 4px 20px 20px 46px;
+  border-left: 3px solid {EMBER};
+  background: var(--block-background-fill);
+}}
+.it-body dl {{ margin: 0; display: grid; gap: 11px; }}
+.it-field {{
+  display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 16px;
+  align-items: baseline;
+}}
+.it-body dt {{
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.9px;
+  font-weight: 650; color: {EMBER}; padding-top: 2px;
+}}
+.it-body dd {{
+  margin: 0; font-size: 13.5px; line-height: 1.65;
+  color: var(--body-text-color);
+}}
+.it-stamp {{
+  margin: 16px 0 0 !important; padding-top: 11px;
+  border-top: 1px solid var(--border-color-primary);
+  font-size: 11.5px; color: var(--body-text-color-subdued);
+}}
 
 /* ---------- empty state ---------- */
-.empty {{
-  text-align: center; padding: 46px 20px !important;
-  border: 1px dashed var(--border-color-primary) !important;
-  border-radius: 12px !important;
-  background: var(--background-fill-secondary) !important;
+.it-empty {{
+  text-align: center; padding: 48px 20px;
+  border: 1px dashed var(--border-color-primary);
+  border-radius: 12px; background: var(--background-fill-secondary);
 }}
-.empty .prose p {{ margin: 4px 0 !important; color: var(--body-text-color-subdued); }}
-.empty .prose p:first-child {{ font-size: 15px; color: var(--body-text-color); }}
+.it-empty p {{ margin: 4px 0 !important; color: var(--body-text-color-subdued); }}
+.it-empty p.t {{ font-size: 15px; color: var(--body-text-color); }}
+
+/* narrow screens: drop the columns that repeat inside the open row */
+@media (max-width: 860px) {{
+  .it-head, .idea-table summary {{ grid-template-columns: 76px minmax(0,1fr) 92px; }}
+  .it-head span:nth-child(3), .it-author,
+  .it-head span:nth-child(4), .it-dept {{ display: none; }}
+  .it-body {{ padding-left: 20px; }}
+  .it-field {{ grid-template-columns: 1fr; gap: 2px; }}
+}}
 
 /* ---------- chat page ---------- */
 #chat-hint .prose p {{
