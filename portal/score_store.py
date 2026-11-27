@@ -52,7 +52,9 @@ def current_scores(name: str, version: int, sha: str) -> dict[str, Score]:
                 "score.metric_version, score.metric_sha, score.value, "
                 "score.rationale, score.details "
                 "FROM app_generated.score AS score "
-                "JOIN app_generated.raw_idea AS idea "
+                "JOIN (SELECT id, version FROM app_generated.raw_idea "
+                "UNION ALL SELECT id, max(version) FROM app_generated.refined_idea "
+                "GROUP BY id) AS idea "
                 "ON idea.id = score.idea_id AND idea.version = score.idea_version "
                 "WHERE score.metric_name = %s AND score.metric_version = %s "
                 "AND score.metric_sha = %s",

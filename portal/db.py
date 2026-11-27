@@ -60,7 +60,7 @@ TABLES = [
     """,
     """
     CREATE TABLE IF NOT EXISTS app_generated.score (
-        idea_id        text NOT NULL REFERENCES app_generated.raw_idea (id),
+        idea_id        text NOT NULL,
         idea_version   integer NOT NULL,
         metric_name    text NOT NULL,
         metric_version integer NOT NULL,
@@ -70,6 +70,21 @@ TABLES = [
         details        jsonb NOT NULL,
         scored_at      timestamptz NOT NULL DEFAULT now(),
         PRIMARY KEY (idea_id, idea_version, metric_name, metric_version)
+    )
+    """,
+    # Scores now cover refined ideas too, so they no longer point at raw ideas only.
+    "ALTER TABLE app_generated.score DROP CONSTRAINT IF EXISTS score_idea_id_fkey",
+    "CREATE SEQUENCE IF NOT EXISTS app_generated.refined_idea_number",
+    """
+    CREATE TABLE IF NOT EXISTS app_generated.refined_idea (
+        id          text NOT NULL,
+        version     integer NOT NULL,
+        text        text NOT NULL,
+        sources     jsonb NOT NULL,
+        rationale   text NOT NULL,
+        differences jsonb NOT NULL,
+        saved_at    timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (id, version)
     )
     """,
 ]

@@ -85,6 +85,24 @@ def update_raw_idea(idea_id: str, draft: IdeaDraft, author_id: str) -> bool:
     return True
 
 
+def raw_idea_texts(versions: dict[str, int]) -> dict[str, str]:
+    """By ID, the text each idea had at the given version."""
+    texts = {}
+    with connect() as connection:
+        for idea_id, version in sorted(versions.items()):
+            row = connection.execute(
+                "SELECT text FROM app_generated.raw_idea "
+                "WHERE id = %(id)s AND version = %(version)s "
+                "UNION ALL SELECT text FROM app_generated.raw_idea_history "
+                "WHERE idea_id = %(id)s AND version = %(version)s",
+                {"id": idea_id, "version": version},
+            ).fetchone()
+            if row is None:
+                raise ValueError(f"{idea_id} has no version {version}")
+            texts[idea_id] = row[0]
+    return texts
+
+
 class RawIdea(BaseModel):
     """A stored idea. The name and department are None if the author is unknown."""
 

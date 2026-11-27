@@ -1,10 +1,10 @@
-"""Score ideas with the active metric.
+"""Score raw and refined ideas with the active metric.
 
     .venv/bin/python portal/score_ideas.py             # every pending idea
     .venv/bin/python portal/score_ideas.py RI-0001     # one idea, even if scored
     .venv/bin/python portal/score_ideas.py --all       # every idea again
 
-The portal also calls this after an idea is submitted or updated.
+The portal also calls this after an idea is submitted, updated or merged.
 """
 
 import argparse
@@ -19,8 +19,9 @@ import yaml
 
 from checks import load_checks, screen
 from db import connect, create_tables
-from idea_store import RawIdea, list_raw_ideas
+from idea_store import RawIdea, list_raw_ideas, raw_idea_texts
 from knowledge import load_knowledge, remove_names
+from refined_store import RefinedIdea, list_refined_ideas
 from score_agent import ScoreContext, ScoreInputs, fill_inputs
 from score_store import Score, current_scores, save_score
 from scoring import Metric, load_metric, score
@@ -57,8 +58,33 @@ def load_setup() -> Setup:
     )
 
 
+def idea_texts(
+    text: str, sources: dict[str, str], employees: dict[str, str]
+) -> tuple[str, str]:
+    """What the agent reads, and the employees' own words that quotes must match.
+
+    Args:
+        sources: By ID, the ideas a refined idea was merged from. Empty for a raw
+            idea, whose text is already the employee's own.
+    """
+
+    def clean(value: str) -> str:
+        # The agent judges the idea without knowing who anyone is.
+        return remove_names(value, employees)[:MAX_IDEA_CHARS]
+
+    if not sources:
+        return clean(text), clean(text)
+    originals = {idea_id: clean(source) for idea_id, source in sorted(sources.items())}
+    read = "\n\n".join(
+        [clean(text)]
+        + [f"--- Source idea {idea_id} ---\n{source}" for idea_id, source in originals.items()]
+    )
+    # The refined text was written by a model, so it proves nothing.
+    return read, "\n\n".join(originals.values())
+
+
 def assess(
-    idea: RawIdea,
+    idea: RawIdea | RefinedIdea,
     text: str,
     filled: ScoreInputs,
     documents: dict[str, str],
@@ -67,7 +93,7 @@ def assess(
     """Turn what the agent filled in into a score and flags. No model involved.
 
     Args:
-        text: The idea text the agent read.
+        text: The employees' own words, which quotes are checked against.
     """
     result = score(
         setup.metric,
@@ -92,15 +118,18 @@ def assess(
     )
 
 
-def score_idea(idea: RawIdea, setup: Setup) -> Score:
+def score_idea(idea: RawIdea | RefinedIdea, setup: Setup) -> Score:
     """Score one idea and store the result."""
     with connect() as connection:
         documents, employees = load_knowledge(connection)
-    # The agent judges the idea without knowing who anyone is.
-    text = remove_names(idea.text, employees)[:MAX_IDEA_CHARS]
+    sources = {}
+    if isinstance(idea, RefinedIdea):
+        # The versions it was written from, even if an author has edited since.
+        sources = raw_idea_texts(idea.sources)
+    read, own_words = idea_texts(idea.text, sources, employees)
     context = ScoreContext(documents, setup.metric.text, setup.checks_text)
-    filled = asyncio.run(fill_inputs(text, context, setup.model))
-    result = assess(idea, text, filled, documents, setup)
+    filled = asyncio.run(fill_inputs(read, context, setup.model))
+    result = assess(idea, own_words, filled, documents, setup)
     save_score(result)
     return result
 
@@ -117,7 +146,7 @@ def score_ideas(idea_ids: list[str] | None = None, rescore: bool = False) -> tup
     if not rescore:
         done = set(current_scores(setup.metric.name, setup.metric.version, setup.sha))
     succeeded = failed = 0
-    for idea in list_raw_ideas():
+    for idea in [*list_raw_ideas(), *list_refined_ideas()]:
         if idea.id in done or (idea_ids is not None and idea.id not in idea_ids):
             continue
         try:

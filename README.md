@@ -14,7 +14,8 @@ Suggestion boxes tend to fill up with one-line ideas that nobody can judge. Here
 4. **Submit.** Only the "Submit idea" button stores it, under an ID such as `RI-0001`.
 5. **Improve.** Employees can ask the agent to show their submitted ideas and change one. The "Update idea" button saves the new version under the same ID, and earlier versions are kept.
 6. **Score.** Every new or changed idea is scored in the background. Employees do not see the score.
-7. **Review.** The dashboard ranks the ideas by score and shows their reasons, flags, author and department. Ideas can be searched, filtered and sorted.
+7. **Merge.** The **Merge related ideas** button combines related ideas of different employees into refined ideas, and scores them.
+8. **Review.** The dashboard ranks submitted and refined ideas by score, each in its own tab, and shows their reasons, flags, authors and departments. Ideas can be searched, filtered and sorted.
 
 A complete idea covers:
 
@@ -53,6 +54,16 @@ Ideas are scored again with:
 
 The **Score pending ideas** button on the dashboard does the same as the first command.
 
+### Merging
+
+The merge agent runs only when the innovation team presses **Merge related ideas**. It reads all ideas, groups those that one solution would address, and writes a refined idea for each group. Refined ideas get IDs such as `RF-0001` and have their own tab on the dashboard.
+
+- **At least two people.** Ideas of a single author are never merged.
+- **Ideas stay as they are.** Every refined idea lists the ideas it came from. Contradictions and open points between them are shown under "Why merged".
+- **Pressing again is safe.** A refined idea gets a new version only if a source was added or edited. Edited sources are marked "Changed since merge" until then. Earlier versions are kept in the database.
+- **No author identity.** The agent sees only whether two ideas come from the same person, and names are removed from the texts.
+- **Ranked like other ideas.** Refined ideas are scored with the same metric and ranked in their own tab. Quotes used as evidence must come from the source ideas, not from the merged text.
+
 ### Design choices
 
 - **The employee stays in control.** The agent cannot submit or change anything. It can only propose a draft.
@@ -70,9 +81,9 @@ The **Score pending ideas** button on the dashboard does the same as the first c
 | Viewing and improving submitted ideas | Working |
 | Innovation Dashboard (raw ideas and their authors) | Working |
 | Knowledge base sync to Postgres | Working |
-| Agents reading the knowledge base | Score agent only |
-| Merging related ideas | Planned |
-| Scoring with a swappable metric, and a ranked list | Working for raw ideas |
+| Agents reading the knowledge base | Score and merge agents |
+| Merging related ideas | Working, from a dashboard button |
+| Scoring with a swappable metric, and ranked lists | Working for raw and refined ideas |
 
 ## Architecture
 
@@ -82,19 +93,22 @@ flowchart LR
     C <--> I[Intake agent]
     I -->|draft| C
     C -->|Submit button| DB[(Postgres<br/>app_generated)]
-    DB -->|new or changed idea| S[Score agent]
+    DB -->|new, changed or merged idea| S[Score agent]
     M[/Metric file/] --> S
     S -->|score + reasons| DB
     DB --> D[Innovation Dashboard]
+    D -->|Merge button| R[Merge agent]
+    R -->|refined idea| DB
     D --> T([Innovation team])
 
     F[knowledge-base/ files] -->|sync script| KB[(Postgres<br/>knowledge_base)]
     KB -.->|employee names| C
     KB -.->|authors| D
     KB -.->|read only| S
+    KB -.->|read only| R
 ```
 
-The diagram shows what is built today. [ARCHITECTURE.md](ARCHITECTURE.md) describes the full target design, including the merge agent.
+The diagram shows what is built today. [ARCHITECTURE.md](ARCHITECTURE.md) describes the full target design.
 
 Built with [Gradio](https://www.gradio.app/), the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) and PostgreSQL.
 
@@ -142,7 +156,7 @@ vogel,choose-another-password
 
 Both `.env` and `portal/users.csv` are ignored by git.
 
-The models of both agents and the active metric are set in [config.yaml](portal/config.yaml).
+The models of the agents and the active metric are set in [config.yaml](portal/config.yaml).
 
 ### 3. Load the knowledge base
 
@@ -175,7 +189,11 @@ portal/
   score_prompt.md           Instructions for the score agent
   scoring.py                Checks evidence and calculates the metric
   checks.py                 AI fit and EU AI Act flags
-  knowledge.py              What the score agent may read
+  merge_ideas.py            Merges related ideas and checks what the agent proposes
+  merge_agent.py            The merge agent, which writes refined ideas
+  merge_prompt.md           Instructions for the merge agent
+  refined_store.py          Stored refined ideas
+  knowledge.py              What the score and merge agents may read
   score_store.py            Stored scores
   auth.py                   Login check
   db.py                     Database connection and tables
@@ -184,7 +202,7 @@ portal/
   theme.py                  Colours, styles and the login page
 knowledge-base/             Example company: people, products, processes, policies
 metrics/                    Metric and checks files
-tests/                      Scoring tests
+tests/                      Scoring and merge tests
 ARCHITECTURE.md             Target design
 ```
 
@@ -196,7 +214,7 @@ See the [knowledge base index](knowledge-base/README.md) for the company content
 .venv/bin/python -m unittest discover tests
 ```
 
-They cover scoring, evidence checks, flags and ranking, without a database or API key.
+They cover scoring, evidence checks, flags, ranking and which merges are stored, without a database or API key.
 
 ## Limitations
 
@@ -208,4 +226,6 @@ This is a prototype. Before using it with real data:
 - **Scores vary between runs.** The calculation is fixed, but a model fills the inputs.
 - **Many ideas need information.** Intake does not ask for volumes or effort.
 - **Flags rest on unverified model answers.** A person has to confirm them.
-- **Only the scoring logic has automated tests.**
+- **Merges rest on the model's judgement.** The app checks the sources and authors, not whether the ideas really belong together or the text is faithful to them.
+- **A merge reads all ideas at once.** This suits tens of ideas, not thousands.
+- **Only the scoring and merge rules have automated tests.**
