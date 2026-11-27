@@ -13,9 +13,9 @@ Suggestion boxes tend to fill up with one-line ideas that nobody can judge. Here
 3. **Check the draft.** When nothing is missing, the agent shows the complete idea.
 4. **Submit.** Only the "Submit idea" button stores it, under an ID such as `RI-0001`.
 5. **Improve.** Employees can ask the agent to show their submitted ideas and change one. The "Update idea" button saves the new version under the same ID, and earlier versions are kept.
-6. **Score.** Every new or changed idea is scored in the background. Employees do not see the score.
+6. **Score.** Every new or changed idea is scored in the background, once for each active metric. Employees do not see the scores.
 7. **Merge.** The **Merge related ideas** button combines related ideas of different employees into refined ideas, and scores them.
-8. **Review.** The dashboard ranks submitted and refined ideas by score, each in its own tab, and shows their reasons, flags, authors and departments. Ideas can be searched, filtered and sorted.
+8. **Review.** The dashboard lists submitted and refined ideas in two tables, with one score column per metric. A row opens to show the idea, the reasons and the flags. Ideas can be searched, filtered, and sorted by any score.
 
 A complete idea covers:
 
@@ -30,24 +30,32 @@ A complete idea covers:
 
 ### Scoring
 
-The score agent reads the idea and the knowledge base and fills in the inputs of the metric. The app checks the evidence and calculates the score.
+The score agent reads the idea and the knowledge base and fills in the inputs of one metric at a time. The app checks the evidence and calculates the score.
 
-| Result | Meaning |
+| Metric | Score 0-100 for | Inputs |
+|---|---|---|
+| [RICE](metrics/rice.md) | Value per unit of effort | Reach, impact, confidence, effort |
+| [Feasibility](metrics/feasibility.md) | How easy it is to build | System access, data readiness, effort |
+| [Time saved](metrics/time_saved.md) | Working time freed each month | Cases per month, minutes saved per case |
+
+The scores are separate and never combined. Each metric estimates its own inputs, so two metrics can give different figures for the same thing, such as effort.
+
+| Also shown | Meaning |
 |---|---|
-| Score 0-100 | [RICE](metrics/rice.md): reach, impact, confidence and effort |
-| Needs information | Reach or effort is neither stated nor inferable. The dashboard lists the open questions. |
+| Needs information | A required input is neither stated nor inferable. The dashboard lists the open questions. |
 | AI fit | AI, conventional automation, or more research |
 | EU AI Act | Preliminary risk tier and transparency duties, not legal advice |
 
 - **Evidence is checked.** A quote must exist in the idea or in a readable document, and a quoted reach must contain the number. Estimates are labelled, and their reasoning is not verified.
 - **Flags never change the score** ([checks.md](metrics/checks.md)).
 - **No author identity.** Names are removed from the idea and the documents before the agent reads them. It cannot read confidential documents or the employee list.
-- **The metric is swappable.** Inputs and formula are declared in the [metric file](metrics/README.md).
+- **Metrics are swappable.** Inputs and formula are declared in a [metric file](metrics/README.md), and [config.yaml](portal/config.yaml) lists the active ones.
+- **Flags are checked once per metric.** The dashboard shows the strictest EU AI Act answer, and the AI fit of the first metric.
 
 Ideas are scored again with:
 
 ```bash
-.venv/bin/python portal/score_ideas.py             # every pending idea
+.venv/bin/python portal/score_ideas.py             # every missing score
 .venv/bin/python portal/score_ideas.py RI-0001     # one idea, even if scored
 .venv/bin/python portal/score_ideas.py --all       # every idea again
 ```
@@ -62,7 +70,7 @@ The merge agent runs only when the innovation team presses **Merge related ideas
 - **Ideas stay as they are.** Every refined idea lists the ideas it came from. Contradictions and open points between them are shown under "Why merged".
 - **Pressing again is safe.** A refined idea gets a new version only if a source was added or edited. Edited sources are marked "Changed since merge" until then. Earlier versions are kept in the database.
 - **No author identity.** The agent sees only whether two ideas come from the same person, and names are removed from the texts.
-- **Ranked like other ideas.** Refined ideas are scored with the same metric and ranked in their own tab. Quotes used as evidence must come from the source ideas, not from the merged text.
+- **Ranked like other ideas.** Refined ideas are scored with the same metrics and listed in their own tab. Quotes used as evidence must come from the source ideas, not from the merged text.
 
 ### Design choices
 
@@ -83,7 +91,7 @@ The merge agent runs only when the innovation team presses **Merge related ideas
 | Knowledge base sync to Postgres | Working |
 | Agents reading the knowledge base | Score and merge agents |
 | Merging related ideas | Working, from a dashboard button |
-| Scoring with a swappable metric, and ranked lists | Working for raw and refined ideas |
+| Scoring with several swappable metrics, and ranked tables | Working for raw and refined ideas |
 
 ## Architecture
 
@@ -94,7 +102,7 @@ flowchart LR
     I -->|draft| C
     C -->|Submit button| DB[(Postgres<br/>app_generated)]
     DB -->|new, changed or merged idea| S[Score agent]
-    M[/Metric file/] --> S
+    M[/Metric files/] --> S
     S -->|score + reasons| DB
     DB --> D[Innovation Dashboard]
     D -->|Merge button| R[Merge agent]
@@ -156,7 +164,7 @@ vogel,choose-another-password
 
 Both `.env` and `portal/users.csv` are ignored by git.
 
-The models of the agents and the active metric are set in [config.yaml](portal/config.yaml).
+The models of the agents and the active metrics are set in [config.yaml](portal/config.yaml). Restart the portal after changing it.
 
 ### 3. Load the knowledge base
 
@@ -183,6 +191,7 @@ portal/
   employee_interface.py     Chat page and intake agent
   intake_prompt.md          Instructions for the intake agent
   innovation_dashboard.py   Dashboard page
+  dashboard_table.py        The dashboard's tiles and tables
   idea_store.py             Idea format, saving and listing
   score_ideas.py            Scores ideas: after submit, from the dashboard or the shell
   score_agent.py            The score agent, which fills the metric inputs
@@ -198,7 +207,7 @@ portal/
   auth.py                   Login check
   db.py                     Database connection and tables
   sync_knowledge_base.py    Copies knowledge-base/ to Postgres
-  config.yaml               Models and the active metric
+  config.yaml               Models and the active metrics
   theme.py                  Colours, styles and the login page
 knowledge-base/             Example company: people, products, processes, policies
 metrics/                    Metric and checks files
@@ -224,7 +233,8 @@ This is a prototype. Before using it with real data:
 - **Chats leave your network.** Messages are sent to the OpenAI API, and the Agents SDK uploads traces to OpenAI unless tracing is turned off.
 - **Personal data is not filtered.** The agent asks employees to leave it out, but nothing enforces that.
 - **Scores vary between runs.** The calculation is fixed, but a model fills the inputs.
-- **Many ideas need information.** Intake does not ask for volumes or effort.
+- **Many ideas need information.** An input that is neither stated nor inferable leaves that metric without a score.
+- **Each metric costs a model run per idea.** Three metrics make three runs.
 - **Flags rest on unverified model answers.** A person has to confirm them.
 - **Merges rest on the model's judgement.** The app checks the sources and authors, not whether the ideas really belong together or the text is faithful to them.
 - **A merge reads all ideas at once.** This suits tens of ideas, not thousands.

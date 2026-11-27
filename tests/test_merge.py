@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "portal"))
 
+from dashboard_table import Column, refined_row, table_html  # noqa: E402
 from idea_store import IdeaDraft, RawIdea  # noqa: E402
 from innovation_dashboard import sort_refined  # noqa: E402
 from merge_agent import MergeProposal  # noqa: E402
@@ -125,6 +126,41 @@ class Prompt(unittest.TestCase):
         self.assertEqual(prompt.count("<refined "), 1)
 
 
+class Listing(unittest.TestCase):
+    def test_no_text_becomes_markup(self):
+        bad = "<img src=x onerror=alert(1)> ${alert(1)} {{value}}"
+        idea = raw("RI-0001", text=f"# {bad}\n\n## {bad}\n{bad}\n")
+        idea.author_name = idea.department = bad
+        item = refined({"RI-0001": 2}).model_copy(
+            update={
+                "text": idea.text,
+                "rationale": bad,
+                "differences": [bad],
+                "saved_at": datetime.now(timezone.utc),
+            }
+        )
+        score = Score(
+            idea_id="RF-0001", idea_version=1, metric_name="rice", metric_version=1,
+            metric_sha="", value=None, rationale=bad,
+            details={
+                "inputs": {bad: {"value": 1, "source": "estimate", "evidence": bad, "basis": [bad]}},
+                "estimated": [bad], "flags": [bad], "open_questions": [bad],
+                "ai_fit": {"label": bad, "rule": 1, "reason": bad},
+                "ai_act": {"tier": bad, "citations": [bad], "applies": bad,
+                           "transparency": [bad], "problems": [bad]},
+                "review_required": False,
+            },
+        )
+        table = table_html(
+            [refined_row(item, {"RI-0001": idea})],
+            {"RF-0001": {"rice": score}},
+            [Column("rice", bad)],
+        )
+        for markup in ("<img", "${", "{{"):
+            self.assertNotIn(markup, table)
+        self.assertIn("Source changed", table)
+
+
 class Scoring(unittest.TestCase):
     def test_quotes_must_come_from_the_sources(self):
         read, own_words = idea_texts(
@@ -157,7 +193,8 @@ class Scoring(unittest.TestCase):
 
         items = [item(1, 4), item(2, 3), item(3, 2), item(4, 1)]
         scores = {"RF-0001": scored(80), "RF-0002": scored(None), "RF-0003": scored(30)}
-        ranked = sort_refined(items, "Highest score", scores, {})
+        by_metric = {idea_id: {"rice": value} for idea_id, value in scores.items()}
+        ranked = sort_refined(items, "score:rice", by_metric, {})
         # Highest first, then needing information, then pending.
         self.assertEqual([r.id[-1] for r in ranked], ["1", "3", "2", "4"])
 

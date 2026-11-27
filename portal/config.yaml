@@ -4,5 +4,9 @@ models:
   score_agent: gpt-6.2-sol
   merge_agent: gpt-6.2-sol
 
-# Metric file in metrics/ that scores and ranks the ideas.
-metric: rice.md
+# Metric files in metrics/. Each one scores every idea and gets its own column on the
+# dashboard, in this order. The first one ranks the list by default.
+metrics:
+  - rice.md
+  - feasibility.md
+  - time_saved.md

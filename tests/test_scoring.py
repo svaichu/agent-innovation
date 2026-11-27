@@ -15,14 +15,16 @@ sys.path.insert(0, str(ROOT / "portal"))
 
 from checks import ai_act, screen  # noqa: E402
 from idea_store import RawIdea  # noqa: E402
-from innovation_dashboard import score_badges, score_reasons, sort_ideas  # noqa: E402
+from dashboard_table import Column, raw_row, table_html  # noqa: E402
+from innovation_dashboard import sort_ideas  # noqa: E402
 from knowledge import readable_documents  # noqa: E402
 from score_agent import ScoreInputs  # noqa: E402
-from score_ideas import assess, load_setup  # noqa: E402
+from score_ideas import assess, load_setups  # noqa: E402
 from scoring import calculate, load_metric, score  # noqa: E402
 from sync_knowledge_base import read_documents, read_employees  # noqa: E402
 
-SETUP = load_setup()
+SETUPS = {setup.metric.name: setup for setup in load_setups()}
+SETUP = SETUPS["rice"]
 RICE = load_metric(ROOT / "metrics" / "rice.md")
 EXAMPLES = json.loads((ROOT / "tests" / "example_ideas.json").read_text(encoding="utf-8"))
 FILES = read_documents(ROOT / "knowledge-base")
@@ -87,16 +89,20 @@ class Examples(unittest.TestCase):
                     self.assertTrue(details["review_required"])
 
     def test_dashboard_ranks_and_shows_them(self):
-        scores = {e["id"]: assess_example(e) for e in EXAMPLES}
+        scores = {e["id"]: {"rice": assess_example(e)} for e in EXAMPLES}
         ideas = [raw_idea("new"), *(raw_idea(e["id"]) for e in EXAMPLES)]
-        ranked = sort_ideas(ideas, "Highest score", scores)
-        values = [scores[i.id].value for i in ranked[:-2]]
+        ranked = sort_ideas(ideas, "score:rice", scores)
+        values = [scores[i.id]["rice"].value for i in ranked[:-2]]
         self.assertEqual(values, sorted(values, reverse=True))
         self.assertEqual([i.id for i in ranked[-2:]], ["ai-for-sales", "new"])
-        self.assertIn("Score pending", score_badges(None))
-        for idea in ranked[:-1]:
-            self.assertIn("EU AI Act", score_badges(scores[idea.id]))
-            self.assertIn("not legal advice", score_reasons(scores[idea.id]))
+        columns = [Column("rice", "RICE"), Column("ease", "Ease")]
+        table = table_html([raw_row(i) for i in ranked], scores, columns, "rice")
+        self.assertIn("RICE ▼", table)
+        self.assertIn("Ease", table)
+        self.assertIn("Score pending", table)
+        self.assertIn("Partly scored", table)
+        self.assertEqual(table.count("not legal advice"), len(EXAMPLES))
+        self.assertLess(table.index(ranked[0].id), table.index(ranked[1].id))
 
 
 class Evidence(unittest.TestCase):
@@ -205,6 +211,34 @@ class Metrics(unittest.TestCase):
         ):
             with self.subTest(formula), self.assertRaises(ValueError):
                 calculate(formula, {"x": 1.0})
+
+
+class ActiveMetrics(unittest.TestCase):
+    def result(self, name, **values):
+        quote = "It takes one developer a month"
+        filled = [
+            field(key, value, evidence=quote if key != "cases" else "about 312 tickets per month")
+            for key, value in values.items()
+        ]
+        return score(SETUPS[name].metric, filled, IDEA, DOCUMENTS)
+
+    def test_columns(self):
+        self.assertEqual(
+            [setup.metric.label for setup in SETUPS.values()],
+            ["RICE", "Feasibility", "Time saved"],
+        )
+
+    def test_feasibility(self):
+        easy = self.result("feasibility", system_access=1.0, data_readiness=1.0, effort=0.25)
+        self.assertEqual(easy["value"], 96)
+        hard = self.result("feasibility", system_access=1.0, data_readiness=1.0, effort=6)
+        self.assertEqual(hard["value"], 50)
+        self.assertEqual(self.result("feasibility")["status"], "needs_info")
+
+    def test_time_saved(self):
+        # 312 cases of 5 minutes are 26 hours a month.
+        self.assertEqual(self.result("time_saved", cases=312, minutes_saved=1)["value"], 26)
+        self.assertEqual(self.result("time_saved", cases=312)["status"], "needs_info")
 
 
 class Knowledge(unittest.TestCase):

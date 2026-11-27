@@ -35,12 +35,12 @@ flowchart LR
 | Chat interface | Employee submits an idea and answers follow-up questions | - | - |
 | Agent: Intake | Turns the conversation into one raw idea, confirmed by the employee | Knowledge base | RawIdea |
 | Agent: Merge | Finds related raw ideas of different authors and combines them into a refined idea. Runs from a dashboard button | RawIdea, RefinedIdea, knowledge base | RefinedIdea |
-| Agent: Score | Fills the metric inputs for one idea at a time and answers the checks. The app calculates the score | Idea, metric, checks, knowledge base | Score |
+| Agent: Score | Fills the inputs of one metric for one idea and answers the checks. Runs once per active metric. The app calculates the score | Idea, metric, checks, knowledge base | Score |
 | Idea store | Holds ideas, merge links and scores. App-generated data, in the Postgres schema `app_generated` | - | - |
 | Knowledge base | Company context. Edited in `knowledge-base/`, copied to Postgres with `portal/sync_knowledge_base.py` | - | - |
-| Metric skill file | Defines how ideas are judged, in `metrics/` | - | - |
+| Metric skill files | Each defines one way of judging ideas, in `metrics/` | - | - |
 | Checks file | Flags shown next to any metric: AI fit and EU AI Act screen | - | - |
-| Dashboard | Lists raw and refined ideas, ranked by score, and starts Merge | Idea store | - |
+| Dashboard | Lists raw and refined ideas with one score column per metric, sortable by any of them, and starts Merge | Idea store | - |
 
 ## 3. Data model
 
@@ -71,11 +71,12 @@ Score        { idea_id, idea_version, metric_name, metric_version, metric_sha,
 
 ## 4. Metric contract
 
-The metric is a skill file that can be swapped without code changes. It is chosen in `portal/config.yaml`.
+A metric is a skill file that can be added or swapped without code changes. The active ones are listed in `portal/config.yaml`; their names must differ.
 
 ````markdown
 ---
 name: <metric name>
+label: <column heading, optional>
 version: <integer>
 scale: 0-100
 ---
@@ -103,14 +104,14 @@ caps: {}                  # optional limits when inputs are unknown or estimated
    **Improve:** chat → Intake reads the employee's own RawIdea → employee confirms → new version stored.
 2. **Merge:** the decision team presses the dashboard button. Merge reads all raw and refined ideas without author identity. It creates a RefinedIdea, rewrites an existing one when a source is added or changed (new version), or does nothing. The app drops proposals that break these rules, and never removes a source.
 3. **Score:** a submitted or changed raw idea is scored in the background, and a new or changed refined idea right after the merge. If that fails, it stays pending and can be scored from the dashboard. A refined idea is read together with the source versions it was written from, and quoted evidence must come from those sources.
-4. **Metric change:** a changed metric or checks file makes all scores pending. The dashboard button or `portal/score_ideas.py` rescores them.
-5. **Review:** the dashboard ranks raw and refined ideas separately by their scores under the active metric. Refined ideas list their sources.
+4. **Metric change:** a changed metric file makes the scores of that metric pending, a changed checks file all scores, and an added metric starts as pending. The dashboard button or `portal/score_ideas.py` scores what is missing.
+5. **Review:** the dashboard lists raw and refined ideas separately, ranked by the chosen metric. Refined ideas list their sources.
 
 ## 6. Invariants
 
 - Raw ideas are never edited or deleted by Merge.
 - Merge runs only when a person starts it.
 - Every refined idea is traceable to its source ideas.
-- One ranking uses one metric version only. Ideas not yet scored under it are shown as pending.
+- One ranking uses one version of one metric. Ideas not yet scored under it are shown as pending. Scores of different metrics are never combined.
 - The agent recommends. The decision team decides.
 - Intake shows an employee only knowledge base content that employee is allowed to see.

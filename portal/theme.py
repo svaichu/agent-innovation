@@ -34,6 +34,11 @@ SAND = "#f7f4f0"         # warm page ground
 CSS = f"""
 /* ---------- page frame ---------- */
 .gradio-container {{ max-width: 1120px !important; margin: 0 auto !important; }}
+/* The dashboard table needs the full width. Gradio otherwise sizes the page to
+   its content, and a table that scrolls inside its card asks for none. */
+.gradio-container:has(#filters), .app:has(#filters) {{
+  width: 100% !important; max-width: 1440px !important;
+}}
 footer {{ display: none !important; }}
 
 /* Gradio paints every block with its own background, border and label pill.
@@ -59,7 +64,8 @@ footer {{ display: none !important; }}
   --block-label-border-color: transparent;
   --block-label-text-color: var(--body-text-color-subdued);
 }}
-#filters label > span, #filters .block > label span {{
+#filters label > span, #filters .block > label span,
+#filters [data-testid="block-info"] {{
   background: transparent !important;
   color: var(--body-text-color-subdued) !important;
   font-size: 11px !important;
@@ -110,24 +116,45 @@ footer {{ display: none !important; }}
   font-size: 14px; max-width: 66ch; line-height: 1.6;
 }}
 
-/* ---------- stat tiles: one surface each ---------- */
-#stats {{ gap: 10px; margin: 18px 0 16px; }}
-.stat {{
-  background: var(--background-fill-secondary);
+/* ---------- colours of the listing, lighter on dark ground ---------- */
+.tiles, .ideas {{
+  --tone-blue: #1f5fa8; --tone-green: #2e7d32; --tone-amber: #a66a14;
+  --tone-red: #b03a2e; --tone-purple: #7b4f9e; --tone-grey: #6b6560;
+}}
+/* Two rules: Gradio rewrites selectors, and mishandles a second .dark in a list. */
+.dark .tiles {{
+  --tone-blue: #85b7f0; --tone-green: #7fcf85; --tone-amber: #e8b45c;
+  --tone-red: #f08a7e; --tone-purple: #c39be0; --tone-grey: #b8b0a8;
+}}
+.dark .ideas {{
+  --tone-blue: #85b7f0; --tone-green: #7fcf85; --tone-amber: #e8b45c;
+  --tone-red: #f08a7e; --tone-purple: #c39be0; --tone-grey: #b8b0a8;
+}}
+.blue {{ --tone: var(--tone-blue); }}
+.green {{ --tone: var(--tone-green); }}
+.amber {{ --tone: var(--tone-amber); }}
+.red {{ --tone: var(--tone-red); }}
+.purple {{ --tone: var(--tone-purple); }}
+.grey {{ --tone: var(--tone-grey); }}
+
+/* tiles and table line up with the filter strip */
+.html-container:has(.tiles), .html-container:has(.ideas) {{ padding: 0 !important; }}
+
+/* ---------- stat tiles ---------- */
+.tiles {{
+  display: grid; gap: 12px; margin: 14px 0;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}}
+.tile {{
+  background: var(--block-background-fill);
   border: 1px solid var(--border-color-primary);
-  border-top: 2px solid {EMBER};
-  border-radius: 3px 3px 9px 9px;
-  padding: 13px 15px !important;
-  min-width: 0;
+  border-radius: 12px; padding: 13px 18px;
 }}
-.stat .num {{
-  display: block; font-size: 24px; font-weight: 600;
-  line-height: 1.15; letter-spacing: -0.6px; color: var(--body-text-color);
+.tile b {{
+  display: block; font-size: 28px; line-height: 1.2; font-weight: 700;
+  color: var(--tone, var(--body-text-color));
 }}
-.stat .cap {{
-  display: block; font-size: 10px; text-transform: uppercase;
-  letter-spacing: 0.9px; color: var(--body-text-color-subdued); margin-top: 4px;
-}}
+.tile span {{ font-size: 12.5px; color: var(--body-text-color-subdued); }}
 
 /* ---------- filter strip ---------- */
 #filters {{
@@ -137,53 +164,94 @@ footer {{ display: none !important; }}
   padding: 14px 16px !important; gap: 14px;
   align-items: end; margin-bottom: 2px;
 }}
+#filters .form {{ background: transparent; border: none; box-shadow: none; }}
 #result-count .prose p {{
   margin: 14px 2px 10px !important; font-size: 12.5px;
   color: var(--body-text-color-subdued);
 }}
 
-/* ---------- idea cards: one surface, orange edge attached ---------- */
-.idea-card {{
-  background: var(--background-fill-secondary) !important;
-  border: 1px solid var(--border-color-primary) !important;
-  border-left: 3px solid {EMBER} !important;
-  border-radius: 3px 11px 11px 3px !important;
-  padding: 16px 20px !important;
-  margin-bottom: 12px !important;
-  overflow: hidden;
-}}
-.idea-card .prose h3 {{
-  font-size: 16.5px !important; margin: 7px 0 3px !important;
-  letter-spacing: -0.3px; font-weight: 620;
-}}
-.idea-card .prose h4 {{
-  font-size: 10.5px !important; text-transform: uppercase; letter-spacing: 0.9px;
-  color: {EMBER}; margin: 14px 0 2px !important; font-weight: 650;
-}}
-.idea-card .prose p {{ margin: 3px 0 !important; font-size: 13.5px; line-height: 1.65; }}
-.idea-meta .prose p {{
-  margin: 0 !important; font-size: 12.5px;
-  color: var(--body-text-color-subdued);
-}}
-/* the accordion is part of the card, not a panel sitting on it */
-.idea-card .label-wrap {{
-  padding: 10px 0 0 !important;
-  border-top: 1px solid var(--border-color-primary);
-  margin-top: 13px;
-  font-size: 13px; font-weight: 600; color: {EMBER};
-}}
-.badge {{
-  display: inline-block; font-size: 10px; font-weight: 650;
-  padding: 2px 8px; border-radius: 20px; margin-right: 6px;
-  letter-spacing: 0.4px;
+/* ---------- idea table: one white card, a row per idea ---------- */
+.ideas {{
+  background: var(--block-background-fill);
   border: 1px solid var(--border-color-primary);
-  color: var(--body-text-color-subdued);
+  border-radius: 14px; padding: 4px 14px 8px;
+  overflow-x: auto; color: var(--body-text-color); font-size: 13.5px;
+  /* a wide table scrolls inside its card instead of widening the page */
+  contain: inline-size;
 }}
-.badge-id {{ font-family: var(--font-mono); }}
-.badge-rev {{ border-color: {EMBER}; color: {EMBER}; }}
-.badge-score {{ background: {EMBER}; border-color: {EMBER}; color: #fff; }}
-.badge-review {{ border-color: {EMBER}; color: {EMBER}; }}
-.idea-score .prose p {{ margin: 9px 0 0 !important; line-height: 2; }}
+.ideas .grid {{ min-width: calc(826px + var(--metrics) * 102px); }}
+.ideas .line {{
+  display: grid; align-items: center; column-gap: 10px; padding: 10px 6px;
+  grid-template-columns:
+    76px minmax(190px, 1fr) 98px repeat(var(--metrics), 92px)
+    104px 132px 110px 44px;
+}}
+.ideas .head {{
+  font-size: 12px; font-weight: 650; color: var(--body-text-color-subdued);
+  border-bottom: 1px solid var(--border-color-primary); align-items: end;
+}}
+.ideas .head small {{ display: block; font-weight: 400; opacity: .75; }}
+.ideas .head .sorted {{ color: {EMBER}; }}
+.ideas .idea {{ border-bottom: 1px solid var(--border-color-primary); }}
+.ideas .idea:last-child {{ border-bottom: none; }}
+.ideas summary {{ cursor: pointer; list-style: none; }}
+.ideas summary::-webkit-details-marker {{ display: none; }}
+.ideas summary.line:hover, .ideas .idea[open] > summary {{
+  background: color-mix(in srgb, {EMBER} 7%, transparent);
+}}
+.ideas summary:focus-visible {{ outline: 2px solid {EMBER}; outline-offset: -2px; }}
+.ideas .id {{ font-family: var(--font-mono); font-size: 12px; white-space: nowrap; }}
+.ideas .id::before {{
+  content: "▸"; display: inline-block; width: 12px; color: {EMBER};
+}}
+.ideas .idea[open] .id::before {{ content: "▾"; }}
+.ideas .title b {{ display: block; font-weight: 600; line-height: 1.35; }}
+.ideas small {{
+  display: block; font-size: 11.5px; color: var(--body-text-color-subdued);
+}}
+.ideas .score {{
+  display: grid; grid-template-columns: 52px auto; align-items: center;
+  column-gap: 8px;
+}}
+.ideas .score small, .ideas .score .muted {{ grid-column: 1 / -1; }}
+.ideas .score b {{ font-weight: 600; font-variant-numeric: tabular-nums; }}
+.ideas .meter {{
+  height: 7px; border-radius: 7px; overflow: hidden;
+  background: var(--border-color-primary);
+}}
+.ideas .meter i {{ display: block; height: 100%; background: var(--tone-blue); }}
+.ideas .muted {{ color: var(--body-text-color-subdued); font-size: 12px; }}
+.ideas .pill {{
+  display: inline-block; font-size: 11.5px; font-weight: 600; line-height: 1.4;
+  padding: 2px 9px; border-radius: 20px; color: var(--tone);
+  background: color-mix(in srgb, var(--tone) 13%, transparent);
+}}
+
+/* the opened row: the idea on the left, the reasons on the right */
+.ideas .detail {{
+  display: grid; gap: 28px; padding: 6px 20px 20px 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  border-left: 3px solid {EMBER}; margin: 6px 0 10px;
+}}
+.ideas .detail h4, .ideas .detail h5 {{
+  margin: 12px 0 3px; color: {EMBER}; font-weight: 650;
+}}
+.ideas .detail h4 {{ font-size: 13.5px; }}
+.ideas .metric {{ border-bottom: 1px solid var(--border-color-primary); }}
+.ideas .metric > summary {{ padding: 8px 0; font-weight: 650; color: {EMBER}; }}
+.ideas .metric > summary::before {{ content: "▸ "; }}
+.ideas .metric[open] > summary::before {{ content: "▾ "; }}
+.ideas .metric[open] {{ padding-bottom: 8px; }}
+.ideas .detail h5 {{
+  font-size: 10.5px; text-transform: uppercase; letter-spacing: .9px;
+}}
+.ideas .detail p {{ margin: 2px 0; line-height: 1.6; overflow-wrap: anywhere; }}
+.ideas .detail ul {{ margin: 4px 0; padding-left: 18px; list-style: disc; }}
+.ideas .detail li {{ margin: 3px 0; line-height: 1.55; overflow-wrap: anywhere; }}
+.ideas .detail hr {{
+  border: none; border-top: 1px solid var(--border-color-primary); margin: 14px 0 4px;
+}}
+.ideas-note {{ font-size: 12px; color: var(--body-text-color-subdued); margin: 8px 4px; }}
 #ranking-note .prose p {{
   margin: 6px 2px !important; font-size: 12.5px;
   color: var(--body-text-color-subdued);
@@ -207,7 +275,7 @@ footer {{ display: none !important; }}
 #submit-row {{ margin-top: 10px; }}
 
 @media (max-width: 760px) {{
-  #stats {{ flex-direction: column; }}
+  .ideas .detail {{ grid-template-columns: 1fr; }}
   #portal-who .prose p {{ text-align: left; white-space: normal; }}
 }}
 """

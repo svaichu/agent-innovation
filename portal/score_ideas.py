@@ -1,6 +1,6 @@
-"""Score raw and refined ideas with the active metric.
+"""Score raw and refined ideas with the active metrics.
 
-    .venv/bin/python portal/score_ideas.py             # every pending idea
+    .venv/bin/python portal/score_ideas.py             # every missing score
     .venv/bin/python portal/score_ideas.py RI-0001     # one idea, even if scored
     .venv/bin/python portal/score_ideas.py --all       # every idea again
 
@@ -34,7 +34,7 @@ MAX_IDEA_CHARS = 20_000
 
 @dataclass(frozen=True)
 class Setup:
-    """The active metric and checks. Read from the files each time they are needed."""
+    """One active metric and the checks. Read from the files each time they are needed."""
 
     metric: Metric
     checks: dict
@@ -47,15 +47,23 @@ class Setup:
         return hashlib.sha256(text.encode()).hexdigest()[:12]
 
 
-def load_setup() -> Setup:
+def load_setups() -> list[Setup]:
+    """One setup for each active metric, in the order of the config file."""
     config = yaml.safe_load((PORTAL_DIR / "config.yaml").read_text(encoding="utf-8"))
     checks, checks_text = load_checks(CHECKS_FILE)
-    return Setup(
-        load_metric(METRICS_DIR / config["metric"]),
-        checks,
-        checks_text,
-        config["models"]["score_agent"],
-    )
+    setups = [
+        Setup(
+            load_metric(METRICS_DIR / file),
+            checks,
+            checks_text,
+            config["models"]["score_agent"],
+        )
+        for file in config["metrics"]
+    ]
+    # Scores are stored by metric name, so two files must not share one.
+    if not setups or len({setup.metric.name for setup in setups}) != len(setups):
+        raise ValueError("config.yaml: list at least one metric, each with its own name")
+    return setups
 
 
 def idea_texts(
@@ -118,8 +126,12 @@ def assess(
     )
 
 
-def score_idea(idea: RawIdea | RefinedIdea, setup: Setup) -> Score:
-    """Score one idea and store the result."""
+def score_idea(idea: RawIdea | RefinedIdea, setups: list[Setup]) -> None:
+    """Score one idea with each of these metrics and store the results.
+
+    The metrics run side by side. If some fail, the others are still stored, and
+    the first failure is raised.
+    """
     with connect() as connection:
         documents, employees = load_knowledge(connection)
     sources = {}
@@ -127,30 +139,52 @@ def score_idea(idea: RawIdea | RefinedIdea, setup: Setup) -> Score:
         # The versions it was written from, even if an author has edited since.
         sources = raw_idea_texts(idea.sources)
     read, own_words = idea_texts(idea.text, sources, employees)
-    context = ScoreContext(documents, setup.metric.text, setup.checks_text)
-    filled = asyncio.run(fill_inputs(read, context, setup.model))
-    result = assess(idea, own_words, filled, documents, setup)
-    save_score(result)
-    return result
+
+    async def fill() -> list[ScoreInputs | BaseException]:
+        runs = [
+            fill_inputs(
+                read,
+                ScoreContext(documents, setup.metric.text, setup.checks_text),
+                setup.model,
+            )
+            for setup in setups
+        ]
+        return await asyncio.gather(*runs, return_exceptions=True)
+
+    errors = []
+    for setup, filled in zip(setups, asyncio.run(fill())):
+        try:
+            if isinstance(filled, BaseException):
+                raise filled
+            save_score(assess(idea, own_words, filled, documents, setup))
+        except Exception as error:
+            errors.append(error)
+    if errors:
+        raise errors[0]
 
 
 def score_ideas(idea_ids: list[str] | None = None, rescore: bool = False) -> tuple[int, int]:
-    """Score ideas that have no current score. How many succeeded and failed.
+    """Give ideas the scores they lack. How many ideas succeeded and failed.
 
     Args:
         idea_ids: Only these ideas. All ideas if None.
-        rescore: Also score ideas that already have a current score.
+        rescore: Also replace current scores.
     """
-    setup = load_setup()
-    done = set()
+    setups = load_setups()
+    done: dict[str, set[str]] = {}
     if not rescore:
-        done = set(current_scores(setup.metric.name, setup.metric.version, setup.sha))
+        for setup in setups:
+            metric = setup.metric
+            done[metric.name] = set(current_scores(metric.name, metric.version, setup.sha))
     succeeded = failed = 0
     for idea in [*list_raw_ideas(), *list_refined_ideas()]:
-        if idea.id in done or (idea_ids is not None and idea.id not in idea_ids):
+        if idea_ids is not None and idea.id not in idea_ids:
+            continue
+        pending = [s for s in setups if idea.id not in done.get(s.metric.name, ())]
+        if not pending:
             continue
         try:
-            score_idea(idea, setup)
+            score_idea(idea, pending)
             succeeded += 1
         except Exception:
             # One idea that cannot be scored must not stop the others.

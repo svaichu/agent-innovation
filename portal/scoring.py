@@ -40,6 +40,8 @@ FUNCTIONS = {"log": math.log, "log10": math.log10, "sqrt": math.sqrt, "min": min
 class Metric:
     name: str
     version: int
+    # The column heading.
+    label: str
     formula: str
     inputs: dict[str, dict]
     caps: dict[str, float]
@@ -98,6 +100,11 @@ def load_metric(path: Path) -> Metric:
             raise ValueError("name must be text and version an integer")
         if front.get("scale") != "0-100":
             raise ValueError("scale must be 0-100")
+        label = front.get("label") or (
+            name.upper() if len(name) <= 4 else name.replace("_", " ").capitalize()
+        )
+        if not isinstance(label, str):
+            raise ValueError("label must be text")
         inputs, formula = config["inputs"], config["formula"]
         caps = config.get("caps") or {}
         for key, settings in inputs.items():
@@ -111,7 +118,7 @@ def load_metric(path: Path) -> Metric:
         calculate(formula, {key: 1.0 for key in inputs})
     except (KeyError, TypeError, AttributeError, yaml.YAMLError, ValueError) as error:
         raise ValueError(f"{path}: invalid metric file: {error!r}") from error
-    return Metric(name, version, formula, inputs, caps, text)
+    return Metric(name, version, label, formula, inputs, caps, text)
 
 
 def _normal(text: str) -> str:

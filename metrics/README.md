@@ -5,19 +5,21 @@ Skill files used by the Score agent. Code is in [portal/](../portal/); the contr
 
 | File | What it is |
 |---|---|
-| `rice.md` | The metric: RICE business value, with its inputs, anchors and formula. |
+| `rice.md` | RICE business value, with its inputs, anchors and formula. |
+| `feasibility.md` | How easy an idea is to build with the systems and data at hand. |
+| `time_saved.md` | Working time an idea frees each month. |
 | `checks.md` | Flags shown next to any metric: AI / conventional automation / more research, and a preliminary EU AI Act screen. |
 
 ## Add or change a metric
 
-1. Copy `rice.md`. Set `name` and `version`, keep `scale: 0-100`.
+1. Copy `rice.md`. Set `name`, `version` and, for the column heading, `label`. Keep `scale: 0-100`.
 2. Describe the inputs for the agent in prose.
 3. Declare the same inputs and the formula in the `yaml` block.
-4. Set `metric:` in [portal/config.yaml](../portal/config.yaml).
-5. Score the ideas again: `.venv/bin/python portal/score_ideas.py`.
+4. List the file under `metrics:` in [portal/config.yaml](../portal/config.yaml) and restart the portal.
+5. Score the ideas: `.venv/bin/python portal/score_ideas.py`.
 
-Raise `version` on every change in meaning. Editing the metric or `checks.md` marks stored scores as
-pending, so one ranking never mixes two versions.
+Raise `version` on every change in meaning. Editing a metric marks its stored scores as pending, and
+editing `checks.md` all stored scores, so one ranking never mixes two versions.
 
 Settings of an input:
 
