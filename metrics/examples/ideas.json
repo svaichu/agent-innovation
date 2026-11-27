@@ -1,0 +1,124 @@
+[
+  {
+    "id": "support-ticket-triage",
+    "department": "support",
+    "summary": "AI suggests category and routing for incoming Zendesk tickets; agent confirms.",
+    "transcript": "We get about 312 tickets per month and categorise and route them by hand. I want AI to suggest the category and the right person. All 4 people in support would use it. It would save maybe half a day per week each. Our numbers come from Zendesk reports. One developer for about a month, Zendesk has an API.",
+    "rice_inputs": {
+      "reach": {"value": 312, "evidence": "about 312 tickets per month"},
+      "impact": {"value": 2, "evidence": "save maybe half a day per week each"},
+      "confidence": {"value": 1.0, "evidence": "Our numbers come from Zendesk reports"},
+      "effort": {"value": 1, "evidence": "One developer for about a month"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": false, "rule_expressible": false, "needs_judgement": true, "unstructured_or_language": true, "deterministic_required": false, "prediction_task": false, "has_historical_data": true},
+    "act_answers": {"art5_practices": [], "annex_i_safety_component": false, "annex_iii_area": "none", "profiles_people": false, "narrow_or_preparatory": true, "art50": []},
+    "expected": {"ai_fit": "AI", "tier": "minimal", "status": "scored"}
+  },
+  {
+    "id": "customer-help-chatbot",
+    "department": "sales",
+    "similar_to": "support-ticket-triage",
+    "summary": "Chatbot on the website answers customer questions from the help centre before a ticket is opened.",
+    "transcript": "Customers keep asking the same things about connectivity and logins. A chatbot on our website could answer from the help centre articles. Around 150 customers a month would use it. It could cut repeat tickets a lot, that is a 2027 goal. I think, from my experience, it takes two people about two months.",
+    "rice_inputs": {
+      "reach": {"value": 150, "evidence": "Around 150 customers a month would use it"},
+      "impact": {"value": 3, "evidence": "cut repeat tickets a lot, that is a 2027 goal"},
+      "confidence": {"value": 0.8, "evidence": "from my experience"},
+      "effort": {"value": 4, "evidence": "two people about two months"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": false, "rule_expressible": false, "needs_judgement": true, "unstructured_or_language": true, "deterministic_required": false, "prediction_task": false, "has_historical_data": true},
+    "act_answers": {"art5_practices": [], "annex_i_safety_component": false, "annex_iii_area": "none", "profiles_people": false, "narrow_or_preparatory": false, "art50": ["chatbot"]},
+    "expected": {"ai_fit": "AI", "tier": "minimal", "transparency": true, "status": "scored"}
+  },
+  {
+    "id": "stock-reorder-alert",
+    "department": "operations",
+    "summary": "Send a reorder alert when a part falls below a minimum stock level.",
+    "transcript": "We had two stock-outs this year. When a part goes below the minimum level, the system should email procurement. The 3 people in operations use it. The rule is simple: below the minimum, reorder. Based on the stock sheet. Maybe one week of work.",
+    "rice_inputs": {
+      "reach": {"value": 3, "evidence": "The 3 people in operations use it"},
+      "impact": {"value": 1, "evidence": "We had two stock-outs this year"},
+      "confidence": {"value": 1.0, "evidence": "Based on the stock sheet"},
+      "effort": {"value": 0.25, "evidence": "Maybe one week of work"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": true, "rule_expressible": true, "needs_judgement": false, "unstructured_or_language": false, "deterministic_required": true, "prediction_task": false, "has_historical_data": true},
+    "act_answers": {"art5_practices": [], "annex_i_safety_component": false, "annex_iii_area": "none", "profiles_people": false, "narrow_or_preparatory": true, "art50": []},
+    "expected": {"ai_fit": "conventional automation", "tier": "minimal", "status": "scored"}
+  },
+  {
+    "id": "rank-job-applicants",
+    "department": "finance-people",
+    "summary": "AI scores and ranks job applicants' CVs so People & Culture only reads the top ten.",
+    "transcript": "For each open role we get around 60 CVs. AI could score and rank them so I only read the top ten. It would save me a lot of time. That is a guess. A few weeks with an external tool.",
+    "rice_inputs": {
+      "reach": {"value": 60, "evidence": "around 60 CVs"},
+      "impact": {"value": 1, "evidence": "save me a lot of time"},
+      "confidence": {"value": 0.5, "evidence": "That is a guess"},
+      "effort": {"value": 0.5, "evidence": "A few weeks with an external tool"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": false, "rule_expressible": false, "needs_judgement": true, "unstructured_or_language": true, "deterministic_required": false, "prediction_task": false, "has_historical_data": false},
+    "act_answers": {"art5_practices": [], "annex_i_safety_component": false, "annex_iii_area": "employment", "profiles_people": true, "narrow_or_preparatory": false, "art50": []},
+    "expected": {"ai_fit": "AI", "tier": "high-risk", "status": "scored"}
+  },
+  {
+    "id": "agent-stress-webcam",
+    "department": "support",
+    "summary": "Detect support agents' stress from their webcam during calls.",
+    "transcript": "We could use the webcam to detect when support agents are stressed during calls and give them a break. 4 people. It would help a bit. Just a guess. About a month.",
+    "rice_inputs": {
+      "reach": {"value": 4, "evidence": "4 people"},
+      "impact": {"value": 0.5, "evidence": "It would help a bit"},
+      "confidence": {"value": 0.5, "evidence": "Just a guess"},
+      "effort": {"value": 1, "evidence": "About a month"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": false, "rule_expressible": false, "needs_judgement": true, "unstructured_or_language": true, "deterministic_required": false, "prediction_task": false, "has_historical_data": false},
+    "act_answers": {"art5_practices": ["emotion_work_education"], "annex_i_safety_component": false, "annex_iii_area": "biometrics", "profiles_people": true, "narrow_or_preparatory": false, "art50": ["emotion_or_biometric_categorisation"]},
+    "expected": {"ai_fit": "AI", "tier": "prohibited", "status": "scored"}
+  },
+  {
+    "id": "ai-for-sales",
+    "department": "sales",
+    "summary": "Use AI in sales somehow.",
+    "transcript": "We should use AI in sales somehow, everyone is doing it.",
+    "rice_inputs": {
+      "reach": {"value": null, "evidence": null},
+      "impact": {"value": null, "evidence": null},
+      "confidence": {"value": null, "evidence": null},
+      "effort": {"value": null, "evidence": null},
+      "open_questions": ["Which sales task should AI help with?", "Who would use it and how often?", "Which data would it use (e.g. HubSpot deals)?"]
+    },
+    "fit_answers": {},
+    "act_answers": {},
+    "expected": {"ai_fit": "more research", "tier": "needs_review", "status": "needs_info"}
+  },
+  {
+    "id": "predict-sensor-failures",
+    "department": "engineering",
+    "summary": "Predict sensor and gateway failures from device health logs so support can act before customers notice.",
+    "transcript": "We have 12 months of device health logs in AWS. A model could predict which sensors will fail soon so we contact the customer first. That affects maybe 400 customer sites a month. It supports the goal of fewer support tickets. We know the failure counts from RMA data. Two engineers for two months.",
+    "rice_inputs": {
+      "reach": {"value": 400, "evidence": "maybe 400 customer sites a month"},
+      "impact": {"value": 2, "evidence": "supports the goal of fewer support tickets"},
+      "confidence": {"value": 1.0, "evidence": "We know the failure counts from RMA data"},
+      "effort": {"value": 4, "evidence": "Two engineers for two months"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": true, "rule_expressible": false, "needs_judgement": true, "unstructured_or_language": false, "deterministic_required": false, "prediction_task": true, "has_historical_data": true},
+    "act_answers": {"art5_practices": [], "annex_i_safety_component": false, "annex_iii_area": "none", "profiles_people": false, "narrow_or_preparatory": false, "art50": []},
+    "expected": {"ai_fit": "AI", "tier": "minimal", "status": "scored"}
+  },
+  {
+    "id": "tender-win-prediction",
+    "department": "sales",
+    "summary": "Predict the chance of winning a public tender before writing the response.",
+    "transcript": "Before we answer a tender we could predict if we will win. We write maybe 3 tenders a month. It would help us focus. I am guessing here. Maybe one month of work.",
+    "rice_inputs": {
+      "reach": {"value": 3, "evidence": "maybe 3 tenders a month"},
+      "impact": {"value": 1, "evidence": "It would help us focus"},
+      "confidence": {"value": 0.5, "evidence": "I am guessing here"},
+      "effort": {"value": 1, "evidence": "Maybe one month of work"}
+    },
+    "fit_answers": {"low_volume_low_value": false, "structured_input": false, "rule_expressible": false, "needs_judgement": true, "unstructured_or_language": true, "deterministic_required": false, "prediction_task": true, "has_historical_data": false},
+    "act_answers": {"art5_practices": [], "annex_i_safety_component": false, "annex_iii_area": "none", "profiles_people": false, "narrow_or_preparatory": false, "art50": []},
+    "expected": {"ai_fit": "more research", "tier": "minimal", "status": "scored"}
+  }
+]
