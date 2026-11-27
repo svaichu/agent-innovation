@@ -20,6 +20,9 @@ Katharina Vogel (E01), CEO & Co-founder
     Felix Hartmann (E08), Frontend Developer
     David Okafor (E09), DevOps & IT Administrator
     Vaishnava Hari Seenivasan (E26), Junior Engineer
+    Graziella Credidio (E28), Senior Engineer
+    Sophie Schouten (E29), Senior Engineer
+    Amlendu Shekhar (E30), Senior Engineer
   Marco Rossi (E10), Head of Sales
     Sophie Lemaire (E11), Account Executive, Education
     Ben Schuster (E12), Account Executive, Offices & Industry

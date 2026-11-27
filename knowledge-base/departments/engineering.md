@@ -10,7 +10,7 @@ last_updated: 2026-11-27
 ## Mission
 Build reliable sensors and software.
 
-## Team (8)
+## Team (11)
 | ID | Name | Role | Skills |
 |---|---|---|---|
 | E03 | Priya Raman | Product Manager | Roadmapping; user research |
@@ -21,6 +21,9 @@ Build reliable sensors and software.
 | E08 | Felix Hartmann | Frontend Developer | TypeScript; React; accessibility |
 | E09 | David Okafor | DevOps & IT Administrator | AWS; monitoring; identity management |
 | E26 | Vaishnava Hari Seenivasan | Junior Engineer | tbd |
+| E28 | Graziella Credidio | Senior Engineer | tbd |
+| E29 | Sophie Schouten | Senior Engineer | tbd |
+| E30 | Amlendu Shekhar | Senior Engineer | tbd |
 
 ## Responsibilities
 - Hardware, firmware and Canopy development

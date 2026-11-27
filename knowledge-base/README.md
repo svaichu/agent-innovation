@@ -9,11 +9,11 @@ last_updated: 2026-11-27
 
 > All companies, people, customers and figures here are **invented** for testing and demonstration.
 
-Brambleworks GmbH makes indoor air-quality sensors and monitoring software. 27 employees, Aachen. Content reflects the state on 2026-11-27.
+Brambleworks GmbH makes indoor air-quality sensors and monitoring software. 30 employees, Aachen. Content reflects the state on 2026-11-27.
 
 ## Conventions
 - Every page starts with `title`, `owner`, `classification` and `last_updated`.
-- People are referenced by ID (E01 to E27); look them up in the [directory](people/directory.md).
+- People are referenced by ID (E01 to E30); look them up in the [directory](people/directory.md).
 - Money is in EUR, excluding VAT. Dates are YYYY-MM-DD.
 - Tables with a CSV twin: employees, systems, data inventory, key accounts.
 

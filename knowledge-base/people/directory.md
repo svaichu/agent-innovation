@@ -26,6 +26,9 @@ All people are fictional. The same data is in [employees.csv](employees.csv).
 | E08 | Felix Hartmann | Frontend Developer | E02 | remote | 2023-01-15 | Canopy web dashboard | E07 |
 | E09 | David Okafor | DevOps & IT Administrator | E02 | hybrid | 2022-10-01 | Cloud operations, internal IT, accounts and devices | E07 |
 | E26 | Vaishnava Hari Seenivasan | Junior Engineer | E02 | tbd | 2026-11-27 | tbd | tbd |
+| E28 | Graziella Credidio | Senior Engineer | E02 | tbd | 2026-11-27 | tbd | tbd |
+| E29 | Sophie Schouten | Senior Engineer | E02 | tbd | 2026-11-27 | tbd | tbd |
+| E30 | Amlendu Shekhar | Senior Engineer | E02 | tbd | 2026-11-27 | tbd | tbd |
 
 ## Sales
 | ID | Name | Role | Manager | Work mode | Start | Responsible for | Deputy |
