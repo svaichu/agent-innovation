@@ -2,7 +2,7 @@
 title: "Product & Engineering"
 owner: E03
 classification: internal
-last_updated: 2026-11-26
+last_updated: 2026-11-27
 ---
 
 # Product & Engineering
@@ -10,7 +10,7 @@ last_updated: 2026-11-26
 ## Mission
 Build reliable sensors and software.
 
-## Team (7)
+## Team (8)
 | ID | Name | Role | Skills |
 |---|---|---|---|
 | E03 | Priya Raman | Product Manager | Roadmapping; user research |
@@ -20,6 +20,7 @@ Build reliable sensors and software.
 | E07 | Aylin Demir | Backend Developer | Python; PostgreSQL; AWS |
 | E08 | Felix Hartmann | Frontend Developer | TypeScript; React; accessibility |
 | E09 | David Okafor | DevOps & IT Administrator | AWS; monitoring; identity management |
+| E26 | Vaishnava Hari Seenivasan | Junior Engineer | tbd |
 
 ## Responsibilities
 - Hardware, firmware and Canopy development

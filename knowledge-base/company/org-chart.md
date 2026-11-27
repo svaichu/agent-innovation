@@ -2,7 +2,7 @@
 title: "Org chart"
 owner: E25
 classification: internal
-last_updated: 2026-11-26
+last_updated: 2026-11-27
 ---
 
 # Org chart
@@ -19,6 +19,7 @@ Katharina Vogel (E01), CEO & Co-founder
     Aylin Demir (E07), Backend Developer
     Felix Hartmann (E08), Frontend Developer
     David Okafor (E09), DevOps & IT Administrator
+    Vaishnava Hari Seenivasan (E26), Junior Engineer
   Marco Rossi (E10), Head of Sales
     Sophie Lemaire (E11), Account Executive, Education
     Ben Schuster (E12), Account Executive, Offices & Industry
@@ -35,4 +36,5 @@ Katharina Vogel (E01), CEO & Co-founder
   Miriam Scholz (E23), Finance & Administration Lead
     Jan Peters (E24), Accountant
     Fatima El-Amrani (E25), People & Culture Generalist
+  Diyana Muhammed (E27), Head of HR
 ```
