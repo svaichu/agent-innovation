@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT / "portal"))
 
 from checks import ai_act, screen  # noqa: E402
 from idea_store import RawIdea  # noqa: E402
-from innovation_dashboard import format_idea, rank  # noqa: E402
+from innovation_dashboard import score_badges, score_reasons, sort_ideas  # noqa: E402
 from knowledge import readable_documents  # noqa: E402
 from score_agent import ScoreInputs  # noqa: E402
 from score_ideas import assess, load_setup  # noqa: E402
@@ -89,13 +89,14 @@ class Examples(unittest.TestCase):
     def test_dashboard_ranks_and_shows_them(self):
         scores = {e["id"]: assess_example(e) for e in EXAMPLES}
         ideas = [raw_idea("new"), *(raw_idea(e["id"]) for e in EXAMPLES)]
-        ranked = rank(ideas, scores)
+        ranked = sort_ideas(ideas, "Highest score", scores)
         values = [scores[i.id].value for i in ranked[:-2]]
         self.assertEqual(values, sorted(values, reverse=True))
         self.assertEqual([i.id for i in ranked[-2:]], ["ai-for-sales", "new"])
-        self.assertIn("**Score:** pending", format_idea(ideas[0], None))
+        self.assertIn("Score pending", score_badges(None))
         for idea in ranked[:-1]:
-            self.assertIn("not legal advice", format_idea(idea, scores[idea.id]))
+            self.assertIn("EU AI Act", score_badges(scores[idea.id]))
+            self.assertIn("not legal advice", score_reasons(scores[idea.id]))
 
 
 class Evidence(unittest.TestCase):

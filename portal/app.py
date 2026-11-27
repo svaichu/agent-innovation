@@ -16,6 +16,7 @@ import innovation_dashboard
 from auth import check_login, find_employee, is_dashboard_user
 from db import connect, create_tables
 from score_ideas import load_setup
+from theme import CSS, THEME, login_message
 
 
 def latest_commit_time() -> str:
@@ -37,18 +38,22 @@ def show_page(request: gr.Request):
     username = request.username or ""
     dashboard = is_dashboard_user(username)
     if dashboard:
-        label = "Signed in as **Innovation team**"
+        label = "**Innovation team**  ·  all submitted ideas"
     elif employee := find_employee(username):
-        label = f"Signed in as **{employee['name']}** ({employee['id']})"
+        label = (f"**{employee['name']}**  ·  {employee['id']}"
+                 f"  ·  {employee.get('department', '')}".rstrip(" ·"))
     else:
-        label = "Signed in as **unknown**"
+        label = "**Unknown user**  ·  your login matches no employee"
     return label, gr.update(visible=not dashboard), gr.update(visible=dashboard)
 
 
 with gr.Blocks(title="Idea Portal", fill_height=True) as demo:
-    with gr.Row(equal_height=True):
-        user_label = gr.Markdown()
-        gr.Button("Log out", link="/logout?all_session=false", size="sm", scale=0)
+    with gr.Row(elem_id="portal-bar", equal_height=True):
+        gr.Markdown("# Idea Portal\nBrambleworks GmbH",
+                    elem_id="portal-brand", scale=3)
+        user_label = gr.Markdown(elem_id="portal-who", scale=4)
+        gr.Button("Log out", link="/logout?all_session=false", size="sm",
+                  scale=0, min_width=100)
     # Hiding a page is not access control: each page also checks the user itself.
     with gr.Column(visible=False, scale=1) as employee_page:
         employee_interface.build()
@@ -68,12 +73,11 @@ def check_database() -> None:
 if __name__ == "__main__":
     check_database()
     load_setup()  # Fail at startup if the metric or checks file is broken.
-    # The login page only takes a message, so CSS moves the commit time to the bottom.
-    footer = (
-        '<span style="position: fixed; bottom: 1rem; left: 0; right: 0; '
-        f'text-align: center; font-size: small">Latest commit: {latest_commit_time()}</span>'
-    )
+    # The login page is rendered separately and never sees `css`, so its styles
+    # travel inside auth_message. See theme.login_message().
     demo.launch(
         auth=check_login,
-        auth_message=f"Employees: log in with your last name in lowercase.{footer}",
+        theme=THEME,
+        css=CSS,
+        auth_message=login_message(latest_commit_time()),
     )

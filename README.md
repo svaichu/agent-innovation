@@ -14,7 +14,7 @@ Suggestion boxes tend to fill up with one-line ideas that nobody can judge. Here
 4. **Submit.** Only the "Submit idea" button stores it, under an ID such as `RI-0001`.
 5. **Improve.** Employees can ask the agent to show their submitted ideas and change one. The "Update idea" button saves the new version under the same ID, and earlier versions are kept.
 6. **Score.** Every new or changed idea is scored in the background. Employees do not see the score.
-7. **Review.** The dashboard ranks the ideas by score and shows their reasons, flags, author and department.
+7. **Review.** The dashboard ranks the ideas by score and shows their reasons, flags, author and department. Ideas can be searched, filtered and sorted.
 
 A complete idea covers:
 
@@ -180,7 +180,8 @@ portal/
   auth.py                   Login check
   db.py                     Database connection and tables
   sync_knowledge_base.py    Copies knowledge-base/ to Postgres
-  config.yaml               Model settings
+  config.yaml               Models and the active metric
+  theme.py                  Colours, styles and the login page
 knowledge-base/             Example company: people, products, processes, policies
 metrics/                    Metric and checks files
 tests/                      Scoring tests
