@@ -19,16 +19,19 @@ li { margin-bottom:12px; }
 .why .eyebrow { color:#FFA94D; }
 .why .lead { font-size:36px; }
 .why .left { width:940px; gap:36px; }
-.why .stats { flex:1; gap:48px; }
-.why .stat { display:flex; flex-direction:column; gap:8px; border-top:3px solid #FFA94D; padding:28px 0 0 0; }
-.why .num { font-family:'Space Grotesk', Arial, sans-serif; font-size:112px; line-height:1; font-weight:700; color:#FFA94D; }
+.why .issues { flex:1; gap:48px; }
+.why .issue { display:flex; flex-direction:column; gap:12px; border-top:3px solid #FFA94D; padding:28px 0 0 0; }
+.why .issue h3 { color:#FFA94D; }
 .why .footer { color:#D5DEE8; }
 
-.how .before { width:480px; display:flex; flex-direction:column; gap:20px; background:#EAE5D8; border-radius:16px; padding:36px; }
-.how .quote { font-family:'Space Grotesk', Arial, sans-serif; font-size:44px; line-height:1.25; color:#12263A; }
-.how table { font-size:24px; color:#12263A; }
-.how .steps { display:flex; gap:32px; }
-.how .step { flex:1; display:flex; flex-direction:column; gap:8px; border-top:4px solid #B63D0C; padding:20px 0 0 0; }
+.how { gap:40px; }
+.how .card { gap:12px; padding:28px 36px; }
+.how .merge { display:flex; gap:32px; align-items:center; }
+.how .views { width:820px; display:flex; flex-direction:column; gap:12px; }
+.how .view { background:#EAE5D8; border-radius:12px; padding:16px 28px; color:#12263A; }
+.how .refined { flex:1; display:flex; flex-direction:column; gap:16px; background:#12263A; border-radius:16px; padding:44px 40px; }
+.how .refined h3 { color:#F6F4EE; }
+.how .refined p { color:#D5DEE8; }
 
 .tag { font-size:24px; font-weight:600; color:#B63D0C; }
 .bar { background:#12263A; border-radius:16px; padding:32px 40px; display:flex; flex-direction:column; gap:8px; }
