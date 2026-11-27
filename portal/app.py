@@ -15,6 +15,7 @@ import employee_interface
 import innovation_dashboard
 from auth import check_login, find_employee, is_dashboard_user
 from db import connect, create_tables
+from score_ideas import load_setup
 
 
 def latest_commit_time() -> str:
@@ -66,6 +67,7 @@ def check_database() -> None:
 
 if __name__ == "__main__":
     check_database()
+    load_setup()  # Fail at startup if the metric or checks file is broken.
     # The login page only takes a message, so CSS moves the commit time to the bottom.
     footer = (
         '<span style="position: fixed; bottom: 1rem; left: 0; right: 0; '

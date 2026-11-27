@@ -58,6 +58,20 @@ TABLES = [
         PRIMARY KEY (idea_id, version)
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS app_generated.score (
+        idea_id        text NOT NULL REFERENCES app_generated.raw_idea (id),
+        idea_version   integer NOT NULL,
+        metric_name    text NOT NULL,
+        metric_version integer NOT NULL,
+        metric_sha     text NOT NULL,
+        value          integer,
+        rationale      text NOT NULL,
+        details        jsonb NOT NULL,
+        scored_at      timestamptz NOT NULL DEFAULT now(),
+        PRIMARY KEY (idea_id, idea_version, metric_name, metric_version)
+    )
+    """,
 ]
 
 

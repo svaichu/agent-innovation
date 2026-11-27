@@ -1,18 +1,18 @@
 ---
 name: checks
-version: 1
-scale: flags
+version: 2
 ---
 # AI fit and EU AI Act screening
 
-These checks give **flags, not a score**. They are shown next to the RICE score and never change
-it: a high business score must not override a regulatory concern. The agent recommends; people decide.
-Result: preliminary screening, not legal advice.
+These checks give **flags, not a score**. They are not a metric: they apply whichever metric is
+active, are shown next to the score and never change it. A high business score must not override a
+regulatory concern. The agent recommends; people decide. Result: preliminary screening, not legal
+advice.
 
-The LLM only answers the questions below (true / false / ids), or `null` when the idea does not say.
-These answers are not quote-checked (a "no" cannot be quoted), so they are shown next to the result
-for a person to confirm. `scoring.py` applies the rules, so every flag carries its rule and
-article. `null` answers lead to "more research" or "needs_review", never to a positive result.
+Answer only the questions below (true / false / ids), or `null` when the idea does not say. These
+answers are not quote-checked (a "no" cannot be quoted), so a person has to confirm them.
+`portal/checks.py` applies the rules, so every flag carries its rule or article. Unanswered AI Act
+questions never give the tier "minimal".
 
 ## 1. AI, conventional automation or more research?
 
@@ -35,6 +35,9 @@ Rules, in order (sources: Google PAIR; Google Rules of ML #1 and #3; Microsoft C
 6. otherwise -> **more research**
 
 ## 2. EU AI Act screen
+
+An idea that would otherwise be "minimal" becomes "needs_review" when it mentions one of the
+`risk_terms` below (regular expressions, case ignored, English and German).
 
 Questions:
 - `art5_practices`: list of matched banned practices (ids below), or `[]`
@@ -78,6 +81,16 @@ every question was answered.
     "emotion_or_biometric_categorisation": "Art. 50(3) inform people exposed to emotion recognition or biometric categorisation",
     "deepfake_or_public_text": "Art. 50(4) disclose deepfakes and AI-generated text on public-interest matters"
   },
+  "risk_terms": [
+    "emotion", "biometri", "facial", "face (recognition|scan|image|detection)", "webcam", "surveil",
+    "monitor\\w* (staff|employee|agent)", "hiring", "recruit", "applicant", "\\bcvs?\\b", "candidate",
+    "performance review", "promotion (decision|review)", "dismiss", "termination", "credit(?! notes?)",
+    "insurance", "\\bschools?\\b", "student", "\\bexams?\\b", "examination", "police", "migration",
+    "deepfake", "manipulat",
+    "gesichtserkennung", "überwach", "bewerb(er|ung)", "einstellungsverfahren", "kündigung",
+    "leistungsbeurteilung", "beförderung", "kredit", "versicherung", "schüler", "prüfung(en)? der (schüler|studierenden)",
+    "polizei"
+  ],
   "dates": {
     "prohibited": "applies since 2 Feb 2025",
     "high_risk_annex_iii": "applies from 2 Dec 2027",

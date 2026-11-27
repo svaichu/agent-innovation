@@ -13,7 +13,8 @@ Suggestion boxes tend to fill up with one-line ideas that nobody can judge. Here
 3. **Check the draft.** When nothing is missing, the agent shows the complete idea.
 4. **Submit.** Only the "Submit idea" button stores it, under an ID such as `RI-0001`.
 5. **Improve.** Employees can ask the agent to show their submitted ideas and change one. The "Update idea" button saves the new version under the same ID, and earlier versions are kept.
-6. **Review.** The dashboard lists every idea, newest first, with its author and department.
+6. **Score.** Every new or changed idea is scored in the background. Employees do not see the score.
+7. **Review.** The dashboard ranks the ideas by score and shows their reasons, flags, author and department.
 
 A complete idea covers:
 
@@ -25,6 +26,32 @@ A complete idea covers:
 | Proposed improvement | What should change? |
 | Who is affected | Whose work does this touch? |
 | Expected benefit | What gets better, for example time saved or fewer errors? |
+
+### Scoring
+
+The score agent reads the idea and the knowledge base and fills in the inputs of the metric. The app checks the evidence and calculates the score.
+
+| Result | Meaning |
+|---|---|
+| Score 0-100 | [RICE](metrics/rice.md): reach, impact, confidence and effort |
+| Needs information | Reach or effort is neither stated nor inferable. The dashboard lists the open questions. |
+| AI fit | AI, conventional automation, or more research |
+| EU AI Act | Preliminary risk tier and transparency duties, not legal advice |
+
+- **Evidence is checked.** A quote must exist in the idea or in a readable document, and a quoted reach must contain the number. Estimates are labelled, and their reasoning is not verified.
+- **Flags never change the score** ([checks.md](metrics/checks.md)).
+- **No author identity.** Names are removed from the idea and the documents before the agent reads them. It cannot read confidential documents or the employee list.
+- **The metric is swappable.** Inputs and formula are declared in the [metric file](metrics/README.md).
+
+Ideas are scored again with:
+
+```bash
+.venv/bin/python portal/score_ideas.py             # every pending idea
+.venv/bin/python portal/score_ideas.py RI-0001     # one idea, even if scored
+.venv/bin/python portal/score_ideas.py --all       # every idea again
+```
+
+The **Score pending ideas** button on the dashboard does the same as the first command.
 
 ### Design choices
 
@@ -43,9 +70,9 @@ A complete idea covers:
 | Viewing and improving submitted ideas | Working |
 | Innovation Dashboard (raw ideas and their authors) | Working |
 | Knowledge base sync to Postgres | Working |
-| Agents reading the knowledge base | Planned |
+| Agents reading the knowledge base | Score agent only |
 | Merging related ideas | Planned |
-| Scoring with a swappable metric, and a ranked list | Planned |
+| Scoring with a swappable metric, and a ranked list | Working for raw ideas |
 
 ## Architecture
 
@@ -55,15 +82,19 @@ flowchart LR
     C <--> I[Intake agent]
     I -->|draft| C
     C -->|Submit button| DB[(Postgres<br/>app_generated)]
+    DB -->|new or changed idea| S[Score agent]
+    M[/Metric file/] --> S
+    S -->|score + reasons| DB
     DB --> D[Innovation Dashboard]
     D --> T([Innovation team])
 
     F[knowledge-base/ files] -->|sync script| KB[(Postgres<br/>knowledge_base)]
     KB -.->|employee names| C
     KB -.->|authors| D
+    KB -.->|read only| S
 ```
 
-The diagram shows what is built today. [ARCHITECTURE.md](ARCHITECTURE.md) describes the full target design, including the merge and score agents.
+The diagram shows what is built today. [ARCHITECTURE.md](ARCHITECTURE.md) describes the full target design, including the merge agent.
 
 Built with [Gradio](https://www.gradio.app/), the [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/) and PostgreSQL.
 
@@ -111,7 +142,7 @@ vogel,choose-another-password
 
 Both `.env` and `portal/users.csv` are ignored by git.
 
-The model used by the intake agent is set in [config.yaml](portal/config.yaml).
+The models of both agents and the active metric are set in [config.yaml](portal/config.yaml).
 
 ### 3. Load the knowledge base
 
@@ -139,15 +170,32 @@ portal/
   intake_prompt.md          Instructions for the intake agent
   innovation_dashboard.py   Dashboard page
   idea_store.py             Idea format, saving and listing
+  score_ideas.py            Scores ideas: after submit, from the dashboard or the shell
+  score_agent.py            The score agent, which fills the metric inputs
+  score_prompt.md           Instructions for the score agent
+  scoring.py                Checks evidence and calculates the metric
+  checks.py                 AI fit and EU AI Act flags
+  knowledge.py              What the score agent may read
+  score_store.py            Stored scores
   auth.py                   Login check
   db.py                     Database connection and tables
   sync_knowledge_base.py    Copies knowledge-base/ to Postgres
   config.yaml               Model settings
 knowledge-base/             Example company: people, products, processes, policies
+metrics/                    Metric and checks files
+tests/                      Scoring tests
 ARCHITECTURE.md             Target design
 ```
 
 See the [knowledge base index](knowledge-base/README.md) for the company content.
+
+## Tests
+
+```bash
+.venv/bin/python -m unittest discover tests
+```
+
+They cover scoring, evidence checks, flags and ranking, without a database or API key.
 
 ## Limitations
 
@@ -156,4 +204,7 @@ This is a prototype. Before using it with real data:
 - **Login is minimal.** Passwords are stored in plain text in `users.csv`.
 - **Chats leave your network.** Messages are sent to the OpenAI API, and the Agents SDK uploads traces to OpenAI unless tracing is turned off.
 - **Personal data is not filtered.** The agent asks employees to leave it out, but nothing enforces that.
-- **There are no automated tests yet.**
+- **Scores vary between runs.** The calculation is fixed, but a model fills the inputs.
+- **Many ideas need information.** Intake does not ask for volumes or effort.
+- **Flags rest on unverified model answers.** A person has to confirm them.
+- **Only the scoring logic has automated tests.**

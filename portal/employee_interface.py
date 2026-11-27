@@ -19,6 +19,7 @@ from idea_store import (
     to_markdown,
     update_raw_idea,
 )
+from score_ideas import score_in_background
 
 PORTAL_DIR = Path(__file__).resolve().parent
 INSTRUCTIONS = (PORTAL_DIR / "intake_prompt.md").read_text(encoding="utf-8")
@@ -200,6 +201,8 @@ def submit_idea(proposal: Proposal | None, history: list[dict], request: gr.Requ
         logging.exception("Could not save an idea")
         gr.Warning("The idea could not be saved. Please try again in a moment.")
         return unchanged
+    # For the innovation team only; the employee does not see the score.
+    score_in_background(idea_id)
     history = history + [{"role": "assistant", "content": confirmation}]
     return history, history, None, gr.update(visible=False)
 
