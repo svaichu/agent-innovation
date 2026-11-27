@@ -24,3 +24,98 @@ E22,Paul Becker,paul.becker@brambleworks.example,Assembly & Quality Technician,o
 E23,Miriam Scholz,miriam.scholz@brambleworks.example,Finance & Administration Lead,finance-people,E01,hybrid,2020-06-01,Controlling; contracts,"Budget, monthly close, contracts, data protection coordination",E24
 E24,Jan Peters,jan.peters@brambleworks.example,Accountant,finance-people,E23,office,2024-01-08,Bookkeeping; payroll preparation,"Invoicing, payables, expenses",E23
 E25,Fatima El-Amrani,fatima.el-amrani@brambleworks.example,People & Culture Generalist,finance-people,E23,hybrid,2023-11-01,Recruiting; onboarding; labour law basics,"Hiring, onboarding, leave, training",E23
+E26,Ottilie Janssens,ottilie.janssens@brambleworks.example,Head of Strategy & AI Portfolio,management,E01,hybrid,2021-01-01,Portfolio management; business cases; AI governance,"Internal AI portfolio, investment cases, AI Act readiness",E27
+E27,Sibel Gerber,sibel.gerber@brambleworks.example,Chief of Staff,management,E01,hybrid,2024-06-15,Programme management; reporting; board preparation,"Company goals, leadership reporting, cross-team programmes",E26
+E28,Dmitri Gruber,dmitri.gruber@brambleworks.example,Executive Assistant,management,E01,office,2023-04-15,Scheduling; travel; board logistics,"Executive calendars, travel, board meeting logistics",E26
+E29,Daniel Osei,daniel.osei@brambleworks.example,"Engineering Manager, Software",engineering,E02,hybrid,2023-07-01,People management; delivery planning; Python,"Canopy software delivery, software hiring",E39
+E30,Ahmet Wendler,ahmet.wendler@brambleworks.example,Senior Backend Developer,engineering,E29,remote,2026-11-01,Python; PostgreSQL; event streaming,Canopy ingestion pipeline,E31
+E31,Eduard Kowalczyk,eduard.kowalczyk@brambleworks.example,Backend Developer,engineering,E29,hybrid,2023-06-01,Python; FastAPI; AWS,Canopy API endpoints,E30
+E32,Casper Bakker,casper.bakker@brambleworks.example,Backend Developer,engineering,E29,remote,2025-03-01,Python; PostgreSQL; testing,Alerting and notifications service,E30
+E33,Timo Arslan,timo.arslan@brambleworks.example,Senior Backend Developer,engineering,E29,remote,2025-12-01,Go; Kubernetes; API design,"Public API v2, rate limiting",E30
+E34,Chiara Donnersmarck,chiara.donnersmarck@brambleworks.example,Backend Developer,engineering,E29,hybrid,2024-11-15,Python; integrations,Third-party integrations,E30
+E35,Ahmet Kuipers,ahmet.kuipers@brambleworks.example,Senior Frontend Developer,engineering,E29,remote,2022-09-15,TypeScript; React; design systems,Canopy dashboard architecture,E30
+E36,Theresa Adeyemi,theresa.adeyemi@brambleworks.example,Frontend Developer,engineering,E29,remote,2023-12-15,TypeScript; React; accessibility,"Dashboard components, WCAG compliance",E30
+E37,Femke Linden,femke.linden@brambleworks.example,Frontend Developer,engineering,E29,hybrid,2021-11-01,TypeScript; React; charting,Measurement charts and reports view,E30
+E38,Gustav Isler,gustav.isler@brambleworks.example,QA Engineer,engineering,E29,hybrid,2024-04-15,Test automation; Playwright,Automated regression suite,E30
+E39,Lars Frey,lars.frey@brambleworks.example,"Product Manager, Canopy",engineering,E02,hybrid,2021-08-01,Roadmapping; analytics; interviews,Canopy roadmap and release scope,E29
+E40,Carla Linden,carla.linden@brambleworks.example,Product Designer,engineering,E02,remote,2025-09-15,Interaction design; prototyping; research,"Canopy UX, design system",E29
+E41,Gregor Zeller,gregor.zeller@brambleworks.example,Technical Writer,engineering,E02,remote,2025-10-15,Documentation; API reference,Product documentation and API reference,E29
+E42,Bianca Esposito,bianca.esposito@brambleworks.example,Hardware Engineer,engineering,E04,office,2024-08-15,PCB design; RF; EMC,Sprig Pro 2 mainboard,E43
+E43,Erkan Pernkopf,erkan.pernkopf@brambleworks.example,Hardware Engineer,engineering,E04,office,2023-03-01,Schematic capture; bring-up,Sensor carrier boards,E42
+E44,Eduard Dahl,eduard.dahl@brambleworks.example,Hardware Engineer,engineering,E04,office,2022-06-01,Power electronics; battery systems,Battery life and power budget,E42
+E45,Chiara Frey,chiara.frey@brambleworks.example,Mechanical Engineer,engineering,E04,office,2023-08-01,CAD; injection moulding; tolerance,Enclosures and mounting hardware,E42
+E46,Yara Urban,yara.urban@brambleworks.example,Test Engineer,engineering,E04,office,2023-06-15,Test rigs; measurement automation,End-of-line and calibration rigs,E42
+E47,Sanne Kraus,sanne.kraus@brambleworks.example,Firmware Engineer,engineering,E06,hybrid,2025-11-01,C; RTOS; LoRaWAN,"Gateway firmware, radio stack",E48
+E48,Konrad Unger,konrad.unger@brambleworks.example,Firmware Engineer,engineering,E06,hybrid,2023-05-15,C; embedded Linux; OTA,Over-the-air update pipeline,E47
+E49,Nora Baumann,nora.baumann@brambleworks.example,Firmware Engineer,engineering,E06,office,2021-05-01,C; sensor drivers,Sensor drivers and self-calibration,E47
+E50,Nora Novak,nora.novak@brambleworks.example,Site Reliability Engineer,engineering,E09,hybrid,2024-12-01,AWS; Terraform; observability,"Production reliability, on-call",E51
+E51,Adrian Brands,adrian.brands@brambleworks.example,Site Reliability Engineer,engineering,E09,remote,2023-08-15,Kubernetes; monitoring; incident response,"Monitoring and alerting, runbooks",E50
+E52,Ingeborg Mohr,ingeborg.mohr@brambleworks.example,Head of Data & IT,data-it,E02,hybrid,2022-02-15,Data platform; IT operations; governance,"Data warehouse, BI, internal IT, system integrations",E29
+E53,Matthias Czerny,matthias.czerny@brambleworks.example,Data Engineer,data-it,E52,hybrid,2024-06-01,dbt; Python; data modelling,Data warehouse models and pipelines,E54
+E54,Reinhard Bergmann,reinhard.bergmann@brambleworks.example,Data Analyst,data-it,E52,remote,2024-10-01,SQL; dashboards; statistics,Company KPI dashboards,E53
+E55,Simon Ueberall,simon.ueberall@brambleworks.example,Data Analyst,data-it,E52,hybrid,2024-05-01,SQL; product analytics,Product usage and churn analysis,E53
+E56,Tobias Oppenheim,tobias.oppenheim@brambleworks.example,BI Developer,data-it,E52,remote,2024-12-01,BI tooling; data visualisation,Self-service reporting,E53
+E57,Paulina Frey,paulina.frey@brambleworks.example,IT Support Specialist,data-it,E52,office,2025-06-15,Device management; identity; helpdesk,"Laptops, accounts, internal helpdesk",E53
+E58,Erkan Dietrich,erkan.dietrich@brambleworks.example,IT Support Specialist,data-it,E52,office,2021-02-15,Helpdesk; onboarding setup,"Account setup, first-line internal IT",E53
+E59,Vera Tillmann,vera.tillmann@brambleworks.example,"Sales Manager, DACH",sales,E10,hybrid,2025-11-15,Team leadership; public tenders; forecasting,"Germany, Austria and Switzerland revenue",E65
+E60,Simon Lorenz,simon.lorenz@brambleworks.example,"Account Executive, Education",sales,E59,remote,2023-04-15,Schools and municipalities; tenders,"Education accounts, DACH",E61
+E61,Fiona Visser,fiona.visser@brambleworks.example,"Account Executive, Education",sales,E59,remote,2023-08-15,Public sector; framework agreements,"Municipal accounts, DACH",E60
+E62,Fiona Wagner,fiona.wagner@brambleworks.example,"Account Executive, Offices & Industry",sales,E59,hybrid,2023-06-01,Facility management; industrial accounts,"Commercial accounts, DACH",E60
+E63,Nora Haas,nora.haas@brambleworks.example,"Account Executive, Offices & Industry",sales,E59,hybrid,2025-10-01,Office portfolios; resellers,"Reseller channel, DACH",E60
+E64,Yara Conrad,yara.conrad@brambleworks.example,Sales Development Representative,sales,E59,office,2024-10-01,Outreach; qualification,Inbound and outbound qualification,E60
+E65,Johanna Feldmann,johanna.feldmann@brambleworks.example,"Sales Manager, Benelux",sales,E10,hybrid,2026-02-01,Team leadership; channel sales,Netherlands and Belgium revenue,E59
+E66,Kasper Conrad,kasper.conrad@brambleworks.example,"Account Executive, Education",sales,E65,hybrid,2024-11-01,Dutch education sector; tenders,"Education accounts, Benelux",E67
+E67,Paulina Chernov,paulina.chernov@brambleworks.example,"Account Executive, Offices & Industry",sales,E65,hybrid,2021-09-01,Facility managers; resellers,"Commercial accounts, Benelux",E66
+E68,Florian Mertens,florian.mertens@brambleworks.example,Partner Manager,sales,E65,remote,2025-12-15,Channel partners; enablement,"Reseller programme, Benelux",E66
+E69,Viktor Vogt,viktor.vogt@brambleworks.example,Sales Development Representative,sales,E65,office,2022-02-15,Outreach; qualification,"Lead qualification, Benelux",E66
+E70,Mehmet Zimmermann,mehmet.zimmermann@brambleworks.example,Sales Operations Analyst,sales,E10,hybrid,2024-03-15,CRM administration; forecasting; reporting,"HubSpot data quality, pipeline reporting",E59
+E71,Erkan Dahl,erkan.dahl@brambleworks.example,Demand Generation Manager,marketing,E14,hybrid,2024-08-15,Paid campaigns; marketing automation,Campaigns and lead generation,E72
+E72,Nikolas Fuchs,nikolas.fuchs@brambleworks.example,Product Marketing Manager,marketing,E14,remote,2023-04-15,Positioning; competitive analysis,"Messaging, launch material",E71
+E73,Rebecca Clement,rebecca.clement@brambleworks.example,Graphic Designer,marketing,E14,remote,2024-02-15,Brand design; print; motion,"Brand assets, data sheets",E71
+E74,Quirin Bakker,quirin.bakker@brambleworks.example,Events Manager,marketing,E14,office,2021-04-15,Trade fairs; webinars; logistics,Trade fairs and webinar programme,E71
+E75,Daniel Jost,daniel.jost@brambleworks.example,Content Specialist,marketing,E14,remote,2025-11-01,Copywriting; case studies; German and English,"Case studies, newsletter, translations",E71
+E76,Elif Jansen,elif.jansen@brambleworks.example,Marketing Operations Specialist,marketing,E14,hybrid,2024-07-01,Marketing automation; analytics,Campaign tracking and attribution,E71
+E77,Rafael Ipek,rafael.ipek@brambleworks.example,Support Team Lead,support,E16,hybrid,2024-09-01,Queue management; escalations; coaching,"Ticket queue, SLA performance, shift planning",E86
+E78,Oskar Arslan,oskar.arslan@brambleworks.example,Support Specialist,support,E77,hybrid,2021-12-01,Troubleshooting; LoRaWAN; escalations,Second-line tickets,E79
+E79,Greta Fuchs,greta.fuchs@brambleworks.example,Support Specialist,support,E77,office,2024-05-15,Troubleshooting; knowledge articles,"Ticket queue, help centre",E78
+E80,Orhan Kowalczyk,orhan.kowalczyk@brambleworks.example,Support Specialist,support,E77,remote,2023-02-15,Troubleshooting; Dutch and English,Benelux ticket queue,E78
+E81,Gustav Hoffmann,gustav.hoffmann@brambleworks.example,Support Specialist,support,E77,hybrid,2025-03-01,Troubleshooting; German and English,DACH ticket queue,E78
+E82,Henrik Hoffmann,henrik.hoffmann@brambleworks.example,Support Specialist,support,E77,office,2022-08-15,First-line triage,Ticket triage and categorisation,E78
+E83,Noor Tanner,noor.tanner@brambleworks.example,Support Specialist,support,E77,office,2024-12-01,First-line triage; logins,Account and login questions,E78
+E84,Viktor Visser,viktor.visser@brambleworks.example,Support Specialist,support,E77,office,2021-01-01,Troubleshooting; returns intake,"Returns intake, RMA numbers",E78
+E85,Bianca Baumann,bianca.baumann@brambleworks.example,Support Specialist,support,E77,hybrid,2024-04-01,First-line triage; training,"Ticket queue, customer webinars",E78
+E86,Marta Schmitt,marta.schmitt@brambleworks.example,Knowledge Manager,support,E16,remote,2025-10-15,Technical writing; taxonomy,Help centre content and structure,E77
+E87,Joost Mertens,joost.mertens@brambleworks.example,Customer Success Manager,support,E16,hybrid,2023-03-01,Onboarding; renewals; QBRs,"Key accounts, DACH",E77
+E88,Theresa Pollmann,theresa.pollmann@brambleworks.example,Customer Success Manager,support,E16,hybrid,2025-05-01,Onboarding; adoption,"Mid-market accounts, DACH",E77
+E89,Konrad Janssens,konrad.janssens@brambleworks.example,Customer Success Manager,support,E16,remote,2025-10-01,Onboarding; adoption; Dutch,"Accounts, Benelux",E77
+E90,Svenja Wagner,svenja.wagner@brambleworks.example,Customer Success Manager,support,E16,hybrid,2024-07-15,Renewals; churn prevention,Renewals and at-risk accounts,E77
+E91,Hannes Arslan,hannes.arslan@brambleworks.example,Field Installation Technician,support,E19,field,2023-01-15,Site surveys; installation; LoRaWAN,"Installations, DACH south",E92
+E92,Stefanie Dekker,stefanie.dekker@brambleworks.example,Field Installation Technician,support,E19,field,2024-04-01,Site surveys; installation,"Installations, DACH north",E91
+E93,Orhan Rosenberg,orhan.rosenberg@brambleworks.example,Field Installation Technician,support,E19,field,2024-07-01,Site surveys; installation,"Installations, Benelux",E91
+E94,Casper Vermeulen,casper.vermeulen@brambleworks.example,Field Installation Technician,support,E19,field,2021-04-15,Installation; commissioning,"Installations, Austria",E91
+E95,Carla Kappler,carla.kappler@brambleworks.example,Production Lead,operations,E20,office,2024-07-15,Production planning; lean; quality,"Assembly line, output and yield",E103
+E96,Jakob Vogt,jakob.vogt@brambleworks.example,Assembly Technician,operations,E95,office,2022-04-01,Assembly; soldering,Sensor assembly,E97
+E97,Ute Clement,ute.clement@brambleworks.example,Assembly Technician,operations,E95,office,2022-08-15,Assembly; end-of-line test,Sensor assembly and test,E96
+E98,Linnea Engel,linnea.engel@brambleworks.example,Assembly Technician,operations,E95,office,2023-04-15,Assembly; gateway build,Gateway assembly,E96
+E99,Simon Esposito,simon.esposito@brambleworks.example,Assembly Technician,operations,E95,office,2025-01-15,Assembly; rework,Assembly and rework,E96
+E100,Kasper Huber,kasper.huber@brambleworks.example,Assembly Technician,operations,E95,office,2026-10-15,Assembly; packaging,Assembly and packing,E96
+E101,Femke Tanner,femke.tanner@brambleworks.example,Quality Technician,operations,E95,office,2022-07-15,End-of-line test; calibration,Final test and calibration,E96
+E102,Wanda Fuchs,wanda.fuchs@brambleworks.example,Quality Technician,operations,E95,office,2026-01-01,Repair; fault analysis,Repairs and fault codes,E96
+E103,Bastian Dietrich,bastian.dietrich@brambleworks.example,Production Planner,operations,E20,office,2025-10-01,Demand planning; scheduling,"Production schedule, material planning",E95
+E104,Cedric Visser,cedric.visser@brambleworks.example,Procurement Specialist,operations,E21,office,2022-01-01,Purchasing; supplier negotiation,Component purchasing,E106
+E105,Helena Dietrich,helena.dietrich@brambleworks.example,Supplier Quality Manager,operations,E20,hybrid,2022-01-01,Supplier audits; incoming inspection,Supplier quality and audits,E95
+E106,Oliver Frey,oliver.frey@brambleworks.example,Logistics Coordinator,operations,E21,office,2026-09-01,Shipping; customs; carriers,"Outbound shipping, DACH",E104
+E107,Ursula Keller,ursula.keller@brambleworks.example,Logistics Coordinator,operations,E21,office,2021-12-15,Shipping; returns logistics,"Outbound shipping, Benelux and returns",E104
+E108,Noor Tillmann,noor.tillmann@brambleworks.example,Warehouse Lead,operations,E21,office,2022-10-01,Stock control; goods receipt,"Warehouse, stock counts",E104
+E109,Katrin Arslan,katrin.arslan@brambleworks.example,Inventory Controller,operations,E21,office,2023-11-15,Stock accuracy; cycle counting,Stock records and reconciliation,E104
+E110,Tobias Haas,tobias.haas@brambleworks.example,Head of Quality & Regulatory,quality-compliance,E01,hybrid,2022-07-01,Quality management; CE marking; audits,"Quality system, product compliance, certification",E26
+E111,Zara Fuchs,zara.fuchs@brambleworks.example,Quality Management Systems Manager,quality-compliance,E110,hybrid,2023-07-01,ISO 9001; ISO 27001; process audits,"Quality system, ISO 27001 readiness",E112
+E112,Mira Dubois,mira.dubois@brambleworks.example,Regulatory Affairs Specialist,quality-compliance,E110,hybrid,2024-09-15,CE marking; radio regulation; product standards,Product certification and declarations,E111
+E113,Jolanda Esposito,jolanda.esposito@brambleworks.example,Data Protection Officer,quality-compliance,E110,hybrid,2024-05-01,GDPR; data processing agreements; DPIA,"Data protection, subject requests, DPIAs",E111
+E114,Rebecca Feldmann,rebecca.feldmann@brambleworks.example,Information Security Officer,quality-compliance,E110,hybrid,2025-10-01,Information security; risk assessment; ISO 27001,"Security policy, risk register, access reviews",E111
+E115,Fiona Riedel,fiona.riedel@brambleworks.example,Compliance Analyst,quality-compliance,E110,remote,2025-07-01,Policy documentation; evidence collection,"Audit evidence, policy upkeep, AI Act register",E111
+E116,Kerstin Eriksen,kerstin.eriksen@brambleworks.example,Controller,finance-people,E23,hybrid,2025-12-01,Controlling; budgeting; reporting,"Budgets, forecasts, management reporting",E23
+E117,Daniel Kuipers,daniel.kuipers@brambleworks.example,Accounts Payable Clerk,finance-people,E24,office,2023-04-15,Invoice processing; reconciliation,Supplier invoices and payment runs,E24
+E118,Carla Mohr,carla.mohr@brambleworks.example,Recruiter,finance-people,E25,remote,2022-01-01,Technical recruiting; employer branding,"Hiring pipeline, interviews",E119
+E119,Nikolas Falk,nikolas.falk@brambleworks.example,People Operations Specialist,finance-people,E25,hybrid,2021-04-01,HR administration; payroll preparation; Personio,"Contracts, leave, payroll input",E118
+E120,Lars Gerber,lars.gerber@brambleworks.example,Office Manager,finance-people,E25,office,2024-02-15,Facilities; suppliers; events,"Office, facilities, supplies",E118

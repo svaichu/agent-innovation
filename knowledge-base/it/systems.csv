@@ -1,14 +1,17 @@
-system,purpose,owner_id,personal_data,api_or_automation
-HubSpot,CRM and marketing email,E10,yes,yes
-Zendesk,Support tickets and help centre,E16,yes,yes
-Canopy,Our product platform,E07,yes,yes
-Jira,Product and engineering work,E03,limited,yes
-GitHub,Source code,E02,limited,yes
-AWS (Frankfurt),Hosting,E09,yes,yes
-Grafana,Monitoring,E09,no,yes
-DATEV,Accounting,E23,yes,export only
-Personio,HR records and leave,E25,yes,yes
-Google Workspace,"Email, files, calendar",E09,yes,yes
-Slack,Chat,E09,yes,yes
-Inventory spreadsheet,Stock and orders,E20,limited,no
-RMA spreadsheet,Returns and fault codes,E22,limited,no
+system,purpose,owner_id,personal_data,api_or_automation,in_data_warehouse
+HubSpot,CRM and marketing email,E10,yes,yes,yes
+Zendesk,Support tickets and help centre,E16,yes,yes,yes
+Canopy,Our product platform,E07,yes,yes,yes
+DATEV,Accounting,E23,yes,export only,yes
+Jira,Product and engineering work,E03,limited,yes,no
+GitHub,Source code,E02,limited,yes,no
+AWS (Frankfurt),Hosting,E09,yes,yes,no
+Grafana,Monitoring,E09,no,yes,no
+Personio,"HR records, leave and recruiting",E119,yes,yes,no
+Google Workspace,"Email, files, calendar",E09,yes,yes,no
+Slack,Chat,E09,yes,yes,no
+Confluence,Internal documentation,E52,limited,yes,no
+Data warehouse,Analytics store,E53,yes,yes,n/a
+BI tool,Reporting and dashboards,E56,limited,yes,n/a
+Inventory spreadsheet,Stock and orders,E109,limited,no,no
+RMA spreadsheet,Returns and fault codes,E22,limited,no,no

@@ -7,3 +7,11 @@ C005,Ferrum Components,Industry,E12,340,Pro,28560,2027-01-31,at risk: gateway ou
 C006,Alpenblick Kliniken,Healthcare,E12,480,Pro,40320,2027-05-31,healthy
 C007,Kantoorhuis Delta,Commercial,E12,260,Standard,12480,2027-02-28,low usage
 C008,Lindenhof Schulverbund,Education,E11,410,Standard,17712,2027-09-30,healthy
+C009,Rheinmetropole Berufskollegs,Education,E60,1800,Standard,77760,2027-06-30,healthy
+C010,Brabant Kantoren BV,Commercial,E67,1150,Pro,96600,2027-04-30,healthy
+C011,Wiener Schulverbund Ost,Education,E61,1450,Standard,62640,2027-08-31,healthy
+C012,Stahlwerk Niederrhein,Industry,E62,700,Pro,58800,2027-02-28,at risk: slow onboarding
+C013,Universiteit Zuidveld,Education,E66,2400,Pro,181440,2027-10-31,healthy
+C014,Helvetia Büropark,Commercial,E63,520,Pro,43680,2027-05-31,healthy
+C015,Gemeente Waterlinie,Public,E66,880,Standard,42240,2027-01-31,renewal open
+C016,Klinikum Sonnenfeld,Healthcare,E63,960,Pro,80640,2027-07-31,low usage

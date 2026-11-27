@@ -15,7 +15,7 @@ last_updated: 2026-11-26
 1. The first person to notice posts in the Slack channel #incidents and calls E09 (backup E02).
 2. E09 sets the severity.
 3. The incident lead fixes or contains the problem; E16 informs customers.
-4. If personal data may be affected, tell E23 immediately: authorities may need notice within 72 hours.
+4. If personal data may be affected, tell Jolanda Esposito (E113, Data Protection Officer) immediately: authorities may need notice within 72 hours.
 5. Write a review within 5 working days for SEV1 and SEV2.
 
 ## Severity
