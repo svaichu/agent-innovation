@@ -1,6 +1,7 @@
-"""Innovation Dashboard: every raw idea, who proposed it, and a way to find one.
+"""Innovation Dashboard: every raw idea, ranked by the active metric.
 
-The list is loaded once per page load into a State and then filtered in memory.
+Ideas and their scores are loaded once per page load into State, then filtered in
+memory.
 Searching and filtering therefore does not go back to Postgres - there are tens
 of ideas, not millions, and a round trip per keystroke would be slower and
 noisier than a list comprehension.
@@ -17,9 +18,11 @@ import psycopg
 
 from auth import is_dashboard_user
 from idea_store import RawIdea, list_raw_ideas
+from score_ideas import Setup, load_setup, score_ideas
+from score_store import Score, current_scores
 
 ALL = "All departments"
-SORTS = ["Newest first", "Oldest first", "Department", "Author"]
+SORTS = ["Highest score", "Newest first", "Oldest first", "Department", "Author"]
 
 # The headings the intake agent writes into every idea.
 SECTION = re.compile(r"^#+\s*", re.MULTILINE)
@@ -55,7 +58,85 @@ def matches(idea: RawIdea, query: str, department: str) -> bool:
     return needle in haystack
 
 
-def sort_ideas(ideas: list[RawIdea], how: str) -> list[RawIdea]:
+def one_line(text: object) -> str:
+    """Model and employee text kept on one line, so it cannot add headings."""
+    return " ".join(str(text).split())
+
+
+def badge(text: str, kind: str = "") -> str:
+    return f"<span class='badge {kind}'>{text}</span>"
+
+
+def score_badges(score: Score | None) -> str:
+    """The score and flags at a glance."""
+    if score is None:
+        return badge("Score pending")
+    details = score.details
+    value = "Needs information" if score.value is None else f"Score {score.value}/100"
+    badges = [
+        badge(value, "" if score.value is None else "badge-score"),
+        badge(f"AI fit: {details['ai_fit']['label']}"),
+        badge(f"EU AI Act (preliminary): {details['ai_act']['tier']}"),
+    ]
+    if details["review_required"]:
+        badges.append(badge("Review required", "badge-review"))
+    return " ".join(badges)
+
+
+def score_reasons(score: Score) -> str:
+    """Why the idea got this score and these flags, as Markdown."""
+    details = score.details
+    act = details["ai_act"]
+    lines = [f"- {one_line(score.rationale)}"]
+    for name, item in details["inputs"].items():
+        if item["value"] is not None:
+            source = item["source"].replace("_", " ")
+            lines.append(
+                f"- **{name}** {item['value']:g} ({source}): {one_line(item['evidence'])}"
+            )
+            if item["source"] == "estimate":
+                lines += [f"    - based on: {one_line(fact)}" for fact in item["basis"]]
+    lines += [f"- Warning: {one_line(flag)}" for flag in details["flags"]]
+    lines += [f"- Open: {one_line(question)}" for question in details["open_questions"]]
+    lines.append(f"- AI fit, rule {details['ai_fit']['rule']}: {details['ai_fit']['reason']}")
+    if act["citations"]:
+        applies = f" ({act['applies']})" if act["applies"] else ""
+        lines.append(f"- AI Act: {'; '.join(act['citations'])}{applies}")
+    lines += [f"- Transparency duty: {duty}" for duty in act["transparency"]]
+    lines += [f"- To check: {one_line(problem)}" for problem in act["problems"]]
+    lines.append("- Preliminary screening, not legal advice.")
+    return "\n".join(lines)
+
+
+def rank(ideas: list[RawIdea], scores: dict[str, Score]) -> list[RawIdea]:
+    """Highest score first, then ideas needing information, then pending ones.
+
+    Ties keep the order given.
+    """
+
+    def key(idea: RawIdea) -> tuple[int, int]:
+        if (score := scores.get(idea.id)) is None:
+            return 2, 0
+        if score.value is None:
+            return 1, 0
+        return 0, -score.value
+
+    return sorted(ideas, key=key)
+
+
+def overview(setup: Setup, ideas: list[RawIdea], scores: dict[str, Score]) -> str:
+    pending = sum(idea.id not in scores for idea in ideas)
+    return (
+        f"Scored with {setup.metric.name} version {setup.metric.version}. "
+        f"Pending: {pending}."
+    )
+
+
+def sort_ideas(
+    ideas: list[RawIdea], how: str, scores: dict[str, Score]
+) -> list[RawIdea]:
+    if how == "Highest score":
+        return rank(sort_ideas(ideas, "Newest first", scores), scores)
     if how == "Oldest first":
         return sorted(ideas, key=lambda i: i.created_at)
     if how == "Department":
@@ -69,18 +150,23 @@ def sort_ideas(ideas: list[RawIdea], how: str) -> list[RawIdea]:
 # loading
 # --------------------------------------------------------------------------- #
 def show_ideas(request: gr.Request):
-    """Load every idea for the dashboard user. Returns (ideas, stats, error)."""
+    """Load every idea and its score, for the dashboard user only.
+
+    Returns (ideas, scores by idea ID, ranking note, stats, error).
+    """
     if not is_dashboard_user(request.username or ""):
         # Not an error the visitor needs explaining: they are simply not the
         # dashboard user, and their own page is the one that is visible.
-        return [], empty_stats(), ""
+        return [], {}, "", empty_stats(), ""
     try:
+        setup = load_setup()
         ideas = list_raw_ideas()
-    except psycopg.Error:
+        scores = current_scores(setup.metric.name, setup.metric.version, setup.sha)
+    except (psycopg.Error, ValueError, OSError):
         logging.exception("Could not load the ideas")
-        return [], empty_stats(), (
+        return [], {}, "", empty_stats(), (
             "The ideas could not be loaded. Please try again in a moment.")
-    return ideas, stats_for(ideas), ""
+    return ideas, scores, overview(setup, ideas, scores), stats_for(ideas), ""
 
 
 def empty_stats() -> list[str]:
@@ -124,17 +210,32 @@ def count_label(shown: int, total: int, query: str, department: str) -> str:
     return f"Showing {shown} of {total} ideas {' '.join(narrowed)}."
 
 
+def score_pending(request: gr.Request) -> None:
+    """Score every pending idea."""
+    if not is_dashboard_user(request.username or ""):
+        return
+    try:
+        _, failed = score_ideas()
+    except (psycopg.Error, ValueError, OSError):
+        logging.exception("Could not score the ideas")
+        gr.Warning("The ideas could not be scored. Please try again in a moment.")
+    else:
+        if failed:
+            gr.Warning(f"{failed} ideas could not be scored. The log says why.")
+
+
 # --------------------------------------------------------------------------- #
 # page
 # --------------------------------------------------------------------------- #
 def build(demo: gr.Blocks) -> None:
     """Add the dashboard to the page being built. It loads when the page opens."""
     ideas_state = gr.State([])
+    scores_state = gr.State({})
 
     with gr.Row(elem_classes="page-head"):
         gr.Markdown("## Innovation Dashboard\nEvery idea employees have "
-                    "submitted, newest first. Search the text, filter by "
-                    "department, or sort.")
+                    "submitted, highest score first. Search the text, filter "
+                    "by department, or sort.")
 
     with gr.Row(elem_id="stats", equal_height=True):
         tiles = [gr.Markdown(t, elem_classes=["stat", "flat"])
@@ -149,10 +250,15 @@ def build(demo: gr.Blocks) -> None:
         order = gr.Dropdown(SORTS, value=SORTS[0], label="Sort by", scale=2)
         refresh = gr.Button("Refresh", scale=1, min_width=90)
 
+    with gr.Row(equal_height=True):
+        ranking = gr.Markdown(elem_id="ranking-note", scale=4)
+        score_button = gr.Button("Score pending ideas", size="sm", scale=0,
+                                 min_width=180)
+
     count = gr.Markdown(elem_id="result-count")
 
-    @gr.render(inputs=[ideas_state, query, department, order])
-    def render_ideas(ideas, text, dept, how):
+    @gr.render(inputs=[ideas_state, scores_state, query, department, order])
+    def render_ideas(ideas, scores, text, dept, how):
         if not ideas:
             with gr.Column(elem_classes=["empty", "flat"]):
                 gr.Markdown("No ideas have been submitted yet.\n\n"
@@ -160,7 +266,9 @@ def build(demo: gr.Blocks) -> None:
                             "**Submit idea** in the chat.")
             return
 
-        found = sort_ideas([i for i in ideas if matches(i, text, dept)], how)
+        found = sort_ideas(
+            [i for i in ideas if matches(i, text, dept)], how, scores
+        )
         if not found:
             with gr.Column(elem_classes=["empty", "flat"]):
                 gr.Markdown("Nothing matches those filters.\n\n"
@@ -169,6 +277,7 @@ def build(demo: gr.Blocks) -> None:
             return
 
         for idea in found:
+            score = scores.get(idea.id)
             with gr.Group(elem_classes=["idea-card", "flat"]):
                 revision = ""
                 if idea.version > 1 and idea.updated_at:
@@ -183,15 +292,20 @@ def build(demo: gr.Blocks) -> None:
                               f"{idea.updated_at.astimezone():%d %b %Y, %H:%M}")
                 gr.Markdown(f"{author_line(idea)}  \n{stamp}",
                             elem_classes="idea-meta")
+                gr.Markdown(score_badges(score), elem_classes="idea-score")
+                if score:
+                    with gr.Accordion("Why this score", open=False):
+                        gr.Markdown(score_reasons(score))
                 with gr.Accordion("Read the idea", open=len(found) == 1):
                     gr.Markdown(idea_body(idea))
 
     def refresh_all(request: gr.Request):
-        ideas, stats, message = show_ideas(request)
-        return [ideas, department_choices(ideas), message, *stats]
+        ideas, scores, note, stats, message = show_ideas(request)
+        return [ideas, scores, note, department_choices(ideas), message, *stats]
 
-    outputs = [ideas_state, department, error, *tiles]
+    outputs = [ideas_state, scores_state, ranking, department, error, *tiles]
     gr.on([demo.load, refresh.click], refresh_all, outputs=outputs)
+    score_button.click(score_pending).then(refresh_all, outputs=outputs)
 
     # The count line is cheap to recompute, so it follows every filter change.
     def update_count(ideas, text, dept):

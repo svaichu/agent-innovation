@@ -35,11 +35,12 @@ flowchart LR
 | Chat interface | Employee submits an idea and answers follow-up questions | - | - |
 | Agent: Intake | Turns the conversation into one raw idea, confirmed by the employee | Knowledge base | RawIdea |
 | Agent: Merge | Finds related raw ideas and combines them into a refined idea | RawIdea, RefinedIdea, knowledge base | RefinedIdea |
-| Agent: Score | Applies the metric to one idea at a time | Idea, metric, knowledge base | Score |
+| Agent: Score | Fills the metric inputs for one idea at a time and answers the checks. The app calculates the score. So far: raw ideas | Idea, metric, checks, knowledge base | Score |
 | Idea store | Holds ideas, merge links and scores. App-generated data, in the Postgres schema `app_generated` | - | - |
 | Knowledge base | Company context. Edited in `knowledge-base/`, copied to Postgres with `portal/sync_knowledge_base.py` | - | - |
-| Metric skill file | Defines how ideas are judged | - | - |
-| Dashboard | Lists raw and refined ideas, ranked by score. So far: raw ideas and who proposed them | Idea store | - |
+| Metric skill file | Defines how ideas are judged, in `metrics/` | - | - |
+| Checks file | Flags shown next to any metric: AI fit and EU AI Act screen | - | - |
+| Dashboard | Lists raw and refined ideas, ranked by score. So far: raw ideas | Idea store | - |
 
 ## 3. Data model
 
@@ -48,7 +49,7 @@ Company information and app-generated data are kept apart:
 | Postgres schema | Contains | Source of truth |
 |---|---|---|
 | `knowledge_base` | Company information: `documents`, `employees` | Files in `knowledge-base/`, copied with the sync script |
-| `app_generated` | Everything the app creates: `raw_idea`, `raw_idea_history`, later `refined_idea` | The database only |
+| `app_generated` | Everything the app creates: `raw_idea`, `raw_idea_history`, `score`, later `refined_idea` | The database only |
 
 The knowledge base never contains app-generated data.
 
@@ -56,38 +57,52 @@ The knowledge base never contains app-generated data.
 RawIdea      { id, author_id, text, version, created_at, updated_at }
 RawIdeaHistory { idea_id, version, text, saved_at }
 RefinedIdea  { id, version, text, source_ids[2..n], updated_at }
-Score        { idea_id, idea_version, metric_name, metric_version,
-               value, rationale, scored_at }
+Score        { idea_id, idea_version, metric_name, metric_version, metric_sha,
+               value?, rationale, details, scored_at }
 ```
 
 - A raw idea starts at version 1. Its author can improve it, which raises the version. Earlier texts are kept in `raw_idea_history`.
 - An improved raw idea is still a raw idea, with the same ID. Improving it never creates a refined idea.
 - `RefinedIdea` is planned and not built yet. Only Merge creates one, by combining two or more raw ideas.
 - A raw idea can feed several refined ideas.
+- A score without a `value` means a required input is unknown. `details` holds the status, each input with its source and evidence, open questions and check results.
+- `metric_sha` is a fingerprint of the metric and checks files. A score is current only if it, the metric version and the idea version all match.
 
 ## 4. Metric contract
 
-The metric is a skill file that can be swapped without code changes.
+The metric is a skill file that can be swapped without code changes. It is chosen in `portal/config.yaml`.
 
-```markdown
+````markdown
 ---
 name: <metric name>
 version: <integer>
 scale: 0-100
 ---
 <criteria, weights and scoring instructions>
-```
 
-- **Input:** idea text and knowledge base access. No author identity.
-- **Output:** `{ value, rationale }`
+```yaml
+formula: <arithmetic over the input names, giving 0-100>
+inputs:
+  <input name>:
+    required: true        # or: default: <number>
+caps: {}                  # optional limits when inputs are unknown or estimated
+```
+````
+
+[metrics/README.md](metrics/README.md) lists all settings.
+
+- **Input:** idea text and knowledge base access. No author identity: names are removed, and only `public` and `internal` documents are readable.
+- **Agent output:** one value per metric input, with its source (employee, knowledge base or estimate) and evidence.
+- **Output:** `{ value, rationale }`, calculated by the app from the checked inputs. `value` is empty if a required input is unknown.
+- **Checks** are not part of the metric. They add flags and never change the value.
 
 ## 5. Flows
 
 1. **Submit:** chat → Intake → employee confirms → RawIdea stored.
    **Improve:** chat → Intake reads the employee's own RawIdea → employee confirms → new version stored.
 2. **Merge:** a new RawIdea triggers Merge, which creates a RefinedIdea, adds a source to an existing one (new version), or does nothing.
-3. **Score:** every new or changed idea is scored.
-4. **Metric change:** a new metric version rescores all ideas.
+3. **Score:** every new or changed idea is scored in the background. If that fails, it stays pending and can be scored from the dashboard.
+4. **Metric change:** a changed metric or checks file makes all scores pending. The dashboard button or `portal/score_ideas.py` rescores them.
 5. **Review:** the dashboard sorts stored scores of the active metric. Refined ideas link to their sources.
 
 ## 6. Invariants

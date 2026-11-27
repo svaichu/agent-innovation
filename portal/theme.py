@@ -181,6 +181,13 @@ footer {{ display: none !important; }}
 }}
 .badge-id {{ font-family: var(--font-mono); }}
 .badge-rev {{ border-color: {EMBER}; color: {EMBER}; }}
+.badge-score {{ background: {EMBER}; border-color: {EMBER}; color: #fff; }}
+.badge-review {{ border-color: {EMBER}; color: {EMBER}; }}
+.idea-score .prose p {{ margin: 9px 0 0 !important; line-height: 2; }}
+#ranking-note .prose p {{
+  margin: 6px 2px !important; font-size: 12.5px;
+  color: var(--body-text-color-subdued);
+}}
 
 /* ---------- empty state ---------- */
 .empty {{

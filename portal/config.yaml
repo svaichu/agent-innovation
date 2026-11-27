@@ -1,3 +1,7 @@
 # OpenAI model used by each agent. Restart the portal after a change.
 models:
   intake_agent: gpt-6.2-sol
+  score_agent: gpt-6.2-sol
+
+# Metric file in metrics/ that scores and ranks the ideas.
+metric: rice.md
