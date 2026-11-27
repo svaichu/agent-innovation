@@ -1,0 +1,91 @@
+# AI Compass: default scoring method
+#
+# RICE = (Reach x Impact x Confidence) / Effort
+#
+# Business value only. Regulatory risk is NEVER part of this number - it travels
+# beside the score as its own flags, and no score can clear a risk gate. See
+# config/risk/eu-ai-act.yaml.
+
+name: rice
+version: 1
+label: "RICE v1 (balanced)"
+formula: "(reach * impact * confidence) / effort"
+active: true
+
+# Every idea is scored on the same period, or the numbers are not comparable.
+time_period: per month
+
+reach:
+  description: "How many units are affected per time period."
+  unit_must_match_field: reach_units
+  source: derived.reach_value
+  # Raw counts span tickets/month (1,250) to tenders/month (14), so they are
+  # banded. Banding also stops one large number dominating the whole portfolio.
+  bands:
+    - { max: 10, value: 1, label: "under 10 per month" }
+    - { max: 50, value: 2, label: "10 to 50 per month" }
+    - { max: 200, value: 4, label: "50 to 200 per month" }
+    - { max: 1000, value: 7, label: "200 to 1,000 per month" }
+    - { max: null, value: 10, label: "over 1,000 per month" }
+  missing: { value: null, action: flag_for_review }
+
+impact:
+  description: "How much better each affected unit gets."
+  source: core.expected_benefit
+  scale:
+    - { value: 0.25, label: "minimal", guidance: "a small convenience, no measurable change" }
+    - { value: 0.5,  label: "low",     guidance: "noticeable but under 10% better" }
+    - { value: 1.0,  label: "medium",  guidance: "10 to 30% better on the stated measure" }
+    - { value: 2.0,  label: "high",    guidance: "30 to 60% better, or removes a recurring failure" }
+    - { value: 3.0,  label: "massive", guidance: "over 60% better, or removes the task entirely" }
+  missing: { value: null, action: flag_for_review }
+
+confidence:
+  description: "How good the evidence behind Reach and Impact is."
+  source: derived.confidence_evidence
+  scale:
+    - { value: 1.0,  label: "strong",   guidance: "measured from a system we can query" }
+    - { value: 0.8,  label: "moderate", guidance: "estimated from experience, with a stated basis" }
+    - { value: 0.5,  label: "weak",     guidance: "a reasoned guess, no measurement" }
+    - { value: 0.3,  label: "none",     guidance: "no basis given" }
+  # Confidence is the honesty dial. A weak estimate is published with a low
+  # Confidence, never quietly rounded up and never hidden.
+  caps:
+    - when: derived.impact_basis == guessed
+      max: 0.5
+    - when: core.data is missing
+      max: 0.8
+    - when: core.effort is missing
+      max: 0.8
+  missing: { value: 0.3, action: flag_for_review }
+
+effort:
+  description: "Total person-days to deliver, including review and rollout."
+  source: derived.est_person_days
+  unit: person-days
+  # Divisor, so it is banded to keep the score stable against estimate noise.
+  bands:
+    - { max: 5,   value: 0.5, label: "under a week" }
+    - { max: 20,  value: 1,   label: "1 to 4 weeks" }
+    - { max: 60,  value: 2,   label: "1 to 3 months" }
+    - { max: 150, value: 4,   label: "3 to 7 months" }
+    - { max: null, value: 8,  label: "over 7 months" }
+  missing: { value: null, action: flag_for_review }
+
+# Reported alongside the score, not folded into it.
+report_separately:
+  - derived.est_cost_eur
+  - derived.people_required
+  - feasibility.verdict
+  - risk.article_5
+  - risk.high_risk
+  - risk.article_50
+
+rounding: { score: 1 }
+
+explanation_required:
+  # The agent must emit all of these, or the score is rejected as unexplained.
+  - per_factor_value_and_band
+  - per_factor_evidence_quote
+  - assumptions_made
+  - what_would_raise_confidence

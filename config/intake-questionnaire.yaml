@@ -1,0 +1,319 @@
+# AI Compass: intake questionnaire
+#
+# This file is the contract between the person submitting an idea and the agents
+# that evaluate it. Every core field exists because some downstream agent cannot
+# do its job without it - `consumed_by` names which one. That is how the intake
+# chatbot knows what to ask for, and why it must not move on while a field is
+# empty.
+#
+# Two rules override everything else in this file:
+#   1. Never invent a value. If the person does not know, the field state is
+#      `missing` or `unclear`, and the idea goes to the review queue.
+#   2. The eight core fields are the same for every submission and every client.
+#      Only `extensions` may change per client or industry.
+
+version: 1
+name: core-8
+language: "Reply in the language the employee writes in."
+
+# --- States a field can hold -------------------------------------------------
+# provided : the employee gave a usable answer
+# unclear  : they answered, but not specifically enough to evaluate
+# missing  : asked and not known, or not yet asked
+# assumed  : the agent inferred it and must say so; never counts as evidence
+field_states: [provided, unclear, missing, assumed]
+
+submission_gate:
+  # An idea can be submitted when every required field is `provided`.
+  # It is still scored when optional fields are missing, but the score carries
+  # lower Confidence and the gaps are listed as open questions.
+  require_all: [problem, intended_purpose, users_affected, expected_benefit]
+  warn_if_missing: [deployment_context, data, effort, human_oversight]
+  never_block_on: []
+
+core_fields:
+  - key: problem
+    order: 1
+    question: "What problem are you seeing, and where does it show up in your work?"
+    why_needed: >-
+      Anchors the use case. Without a concrete problem the idea cannot be
+      compared with others or matched against existing work.
+    consumed_by: [similarity, ai_fit, score.reach, feasibility.strategy]
+    required: true
+    good_answer_contains:
+      - who runs into it
+      - how often it happens
+      - what they do today instead
+    validation:
+      min_words: 12
+      must_reference_one_of: [process, system, team, customer]
+    follow_up_triggers:
+      - when: no frequency or volume given
+        ask: "Roughly how often does this happen - daily, weekly, monthly? A rough number is fine."
+      - when: only a solution is described, not a problem
+        ask: "What goes wrong today if nobody does anything about it?"
+      - when: the scope is a whole department rather than a task
+        ask: "Which single step in that work is the most painful?"
+    never: "Do not invent frequencies, volumes or costs. Mark them missing."
+
+  - key: intended_purpose
+    order: 2
+    question: "What should the system actually do? Describe it as a task you would hand to it."
+    why_needed: >-
+      The EU AI Act classifies by intended purpose, not by technology. This is
+      the single field the risk screening depends on most.
+    consumed_by: [risk.article_5, risk.article_6, risk.article_50, ai_fit]
+    required: true
+    good_answer_contains:
+      - the task in one sentence
+      - what the output is used for
+      - whether it decides, recommends, or only organises information
+    validation:
+      min_words: 8
+    follow_up_triggers:
+      - when: it is unclear whether the system decides or suggests
+        ask: "Would the system decide this on its own, or propose something a person then approves?"
+      - when: the purpose names a technology rather than a task
+        ask: "Leaving the technology aside, what job would it do for you?"
+    never: "Do not soften a described automatic decision into a recommendation."
+
+  - key: users_affected
+    order: 3
+    question: "Who would use it, and who else is affected by what it produces?"
+    why_needed: >-
+      Separates users from affected persons. Annex III classification turns on
+      who is affected - employees, candidates and customers carry different
+      obligations. Also sets RICE Reach.
+    consumed_by: [risk.article_6, risk.article_50, score.reach, feasibility.skills]
+    required: true
+    good_answer_contains:
+      - which roles or teams use it
+      - how many people
+      - whether any decision lands on a person
+    validation:
+      min_words: 5
+    follow_up_triggers:
+      - when: only users are named, not affected people
+        ask: "Does the output affect anyone outside the team using it - customers, candidates, colleagues?"
+      - when: no count is given
+        ask: "About how many people would use it, and how many would be affected?"
+      - when: employees or candidates are affected
+        ask: "Would it influence a decision about a person - hiring, assessment, task allocation or monitoring?"
+        flag: employment_context
+    never: "Do not estimate headcounts. The directory is not evidence of who would use a new tool."
+
+  - key: deployment_context
+    order: 4
+    question: "Where would this run, and which systems would it touch?"
+    why_needed: >-
+      Determines feasibility (can we reach those systems at all?) and whether
+      the system is customer-facing, which triggers the Article 50 transparency
+      duty.
+    consumed_by: [risk.article_50, feasibility.systems, feasibility.compliance]
+    required: false
+    good_answer_contains:
+      - internal only, or customer-facing
+      - which systems it reads or writes
+      - whether it runs on request or on a schedule
+    validation:
+      min_words: 4
+    follow_up_triggers:
+      - when: it is unclear whether a customer ever sees the output
+        ask: "Would a customer ever read or interact with what it produces?"
+        flag: customer_facing
+      - when: no system is named
+        ask: "Which tools would it need to read from or write to - Zendesk, HubSpot, Canopy, a spreadsheet?"
+    never: "Do not assume a system has an API. Check the IT systems page."
+
+  - key: data
+    order: 5
+    question: "What data would it need, and where does that data live today?"
+    why_needed: >-
+      The most common reason an idea is not feasible. Also decides whether
+      personal data is involved, which sets the data protection path.
+    consumed_by: [feasibility.data, feasibility.compliance, risk.article_6, score.confidence]
+    required: false
+    good_answer_contains:
+      - which dataset or document type
+      - which system holds it
+      - whether it contains personal data
+    validation:
+      min_words: 4
+    follow_up_triggers:
+      - when: no system or location is named
+        ask: "Where does that data sit today - a system, a shared drive, or someone's spreadsheet?"
+      - when: personal data is plausible but unstated
+        ask: "Would it process personal data about colleagues, candidates or customers?"
+        flag: personal_data
+      - when: the data does not exist yet
+        ask: "If that data is not recorded today, what would have to change first to capture it?"
+        flag: data_not_available
+    never: "Do not assert data quality or volume. Those come from the data inventory, cited."
+
+  - key: expected_benefit
+    order: 6
+    question: "If this worked, what would measurably improve - and by roughly how much?"
+    why_needed: "Sets RICE Impact, and gives the board something to verify afterwards."
+    consumed_by: [score.impact, score.confidence, feasibility.strategy]
+    required: true
+    good_answer_contains:
+      - what gets better (time, errors, revenue, risk)
+      - a rough size
+      - how it could be measured
+    validation:
+      min_words: 5
+    follow_up_triggers:
+      - when: the benefit is qualitative only
+        ask: "Could you put a rough number on it - hours per week, tickets per month, euros?"
+      - when: a number is given with no basis
+        ask: "Is that figure measured, estimated from experience, or a guess? Either is fine - it changes how confident we record the score."
+        sets: confidence_evidence
+    never: "Do not upgrade a guess into an estimate. Record which it is."
+
+  - key: effort
+    order: 7
+    question: "How big do you think this is, and who would need to be involved?"
+    why_needed: >-
+      RICE Effort, and the feasibility check against the 60 person-days per
+      month allocated to internal projects.
+    consumed_by: [score.effort, feasibility.capacity, feasibility.budget]
+    required: false
+    good_answer_contains:
+      - a rough size in days or weeks
+      - which roles or skills are needed
+      - whether anything must be bought
+    validation:
+      min_words: 3
+    follow_up_triggers:
+      - when: no size is given
+        ask: "A rough order of magnitude is enough - days, weeks, or months of work?"
+      - when: no roles are named
+        ask: "Whose help would you need - engineering, data, support, someone external?"
+      - when: a purchase is implied
+        ask: "Would this need a paid tool or an external supplier?"
+        flag: external_spend
+    never: >-
+      Do not produce an effort estimate the employee did not give. An unstated
+      effort is `missing`; the feasibility agent may add its own estimate, but
+      it must be labelled as the agent's, not the employee's.
+
+  - key: human_oversight
+    order: 8
+    question: "Who would check the output, and what happens when it gets something wrong?"
+    why_needed: >-
+      Required by the AI usage policy and central to the Article 14 oversight
+      expectation for high-risk systems. Also the field that most often turns a
+      risky idea into an acceptable one.
+    consumed_by: [risk.article_6, risk.article_50, feasibility.compliance, score.confidence]
+    required: false
+    good_answer_contains:
+      - who reviews, and when
+      - whether a person approves before anything takes effect
+      - what the fallback is
+    validation:
+      min_words: 4
+    follow_up_triggers:
+      - when: no reviewer is named
+        ask: "Who would be accountable for checking what it produces?"
+      - when: the output is described as automatic
+        ask: "Would anything act on the output without a person seeing it first?"
+        flag: unsupervised_action
+      - when: the cost of an error is unclear
+        ask: "If it got this wrong and nobody noticed, what would the consequence be?"
+    never: "Do not assume a human is in the loop. If unstated, that is a gap, and it must be flagged."
+
+# --- Derived parameters ------------------------------------------------------
+# Not asked directly. Each is extracted from the answers above, or raised as an
+# open question when it cannot be determined. They exist because the scoring and
+# risk agents need machine-readable values, not prose.
+derived_parameters:
+  - key: reach_units
+    from: [problem, users_affected]
+    type: string
+    example: "tickets per month"
+    note: "What is being counted. Two ideas can only be compared on the same unit."
+  - key: reach_value
+    from: [problem, users_affected]
+    type: number
+    note: "Count per time_period. Missing unless a number was actually given."
+  - key: time_period
+    from: scoring config
+    type: string
+    default: "per month"
+    note: "Fixed by the active scoring config, never by the employee."
+  - key: impact_basis
+    from: expected_benefit
+    type: enum
+    values: [measured, estimated, guessed]
+    note: "Drives Confidence. `guessed` caps Confidence at 0.5."
+  - key: confidence_evidence
+    from: [expected_benefit, data, effort]
+    type: enum
+    values: [strong, moderate, weak, none]
+  - key: est_person_days
+    from: effort
+    type: number
+    note: "Employee's figure if given, else the feasibility agent's, labelled as such."
+  - key: people_required
+    from: effort
+    type: number
+  - key: est_cost_eur
+    from: [effort, deployment_context]
+    type: number
+    note: "Internal effort at day rates from capacity.csv, plus any external spend."
+  - key: affects_individuals
+    from: [users_affected, intended_purpose]
+    type: boolean
+    note: "Gate for the Article 6 and Annex III check."
+  - key: employment_context
+    from: users_affected
+    type: boolean
+    note: "True for anything touching hiring, assessment, allocation or monitoring of workers. Annex III point 4."
+  - key: decision_automation_level
+    from: [intended_purpose, human_oversight]
+    type: enum
+    values: [informs_only, recommends_human_decides, decides_with_review, decides_automatically]
+    note: "The higher the level, the heavier the Article 6 and Article 14 obligations."
+  - key: interacts_with_humans
+    from: [deployment_context, intended_purpose]
+    type: boolean
+    note: "Gate for the Article 50 transparency flag."
+  - key: personal_data_categories
+    from: data
+    type: list
+    example: [customer contact details, employee records, candidate applications]
+  - key: requires_new_data_capture
+    from: data
+    type: boolean
+    note: "If true, feasibility must account for changing how the data is captured first."
+
+# --- Client and industry extensions -----------------------------------------
+# Added on top of the core eight. They never replace a core field, so records
+# stay comparable across clients.
+extensions:
+  brambleworks:
+    label: "Brambleworks GmbH (sensor manufacturing)"
+    fields:
+      - key: affected_site
+        question: "Which site would this affect - Aachen, Eindhoven, Vienna, or all of them?"
+        consumed_by: [feasibility.capacity]
+        required: false
+      - key: touches_product_safety
+        question: "Could this change what we tell a customer about air quality or sensor accuracy?"
+        why_needed: "Our sensors are explicitly not safety alarms. Anything that changes a measurement claim needs Regulatory Affairs."
+        consumed_by: [risk.article_6, feasibility.compliance]
+        required: false
+  generic_manufacturing:
+    label: "Manufacturing (default)"
+    fields:
+      - key: affects_production_line
+        question: "Would this run on or near the production line?"
+        consumed_by: [feasibility.systems, risk.article_6]
+        required: false
+  generic_services:
+    label: "Professional services (default)"
+    fields:
+      - key: billable_impact
+        question: "Would this change billable time or what a client is charged?"
+        consumed_by: [score.impact]
+        required: false

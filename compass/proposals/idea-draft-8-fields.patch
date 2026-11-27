@@ -1,0 +1,71 @@
+--- a/employee_interface/idea_store.py	2026-11-26 23:19:17
++++ b/employee_interface/idea_store.py	2026-11-27 00:13:09
+@@ -16,8 +16,17 @@
+ 
+ 
+ class IdeaDraft(BaseModel):
+-    """A process or workflow improvement idea, in the employee's own terms."""
++    """A process or workflow improvement idea, in the employee's own terms.
+ 
++    The fields after expected_benefit are not extra detail for its own sake.
++    The evaluation agent cannot do its job without them: deployment_context
++    and human_oversight decide the EU AI Act transparency and oversight
++    questions, data_needed decides whether the idea is feasible at all, and
++    effort is the divisor in the RICE score. Collected here rather than
++    guessed later, because a guessed deployment context produces a wrong
++    regulatory screening.
++    """
++
+     title: str
+     scope: Literal["company process", "own workflow"]
+     current_process: str
+@@ -25,6 +34,10 @@
+     proposed_improvement: str
+     who_is_affected: str
+     expected_benefit: str
++    deployment_context: str
++    data_needed: str
++    effort: str
++    human_oversight: str
+ 
+     def missing_fields(self) -> list[str]:
+         return [name for name, value in self if not value.strip()]
+@@ -49,6 +62,10 @@
+         ("Proposed improvement", draft.proposed_improvement),
+         ("Who is affected", draft.who_is_affected),
+         ("Expected benefit", draft.expected_benefit),
++        ("Deployment context", draft.deployment_context),
++        ("Data needed", draft.data_needed),
++        ("Effort", draft.effort),
++        ("Human oversight", draft.human_oversight),
+     ]
+     body = "\n\n".join(f"## {name}\n{text.strip()}" for name, text in sections)
+     return f"# {title}\n\n{body}\n"
+--- a/employee_interface/app.py	2026-11-26 23:19:17
++++ b/employee_interface/app.py	2026-11-27 00:13:09
+@@ -18,8 +18,13 @@
+ - the current process: how it works today
+ - the problem with it
+ - the proposed improvement
+-- who is affected
++- who is affected: who uses it, and who else is affected by what it produces
+ - the expected benefit, for example time saved or fewer errors
++- the deployment context: where it would run, which systems it touches, and
++  whether anyone outside the company would see its output
++- the data needed, and where that data sits today
++- the effort: a rough size and who would need to be involved
++- human oversight: who checks the output, and what happens when it is wrong
+ 
+ Rules:
+ - Check what the employee has already said, then ask for what is missing or too
+@@ -31,6 +36,10 @@
+ - Ask the employee to leave out personal data about colleagues or customers and
+   confidential details, and never put them in a draft.
+ - Do not score or judge the idea.
++- Ask the last four points plainly, and accept a short answer. "Internal only,
++  reads Zendesk" is a complete deployment context. "I do not know" is a valid
++  answer to the data question and must be recorded as unknown, not filled in
++  by you.
+ - When nothing is missing, call propose_idea. The draft is then shown below your
+   reply, so do not repeat it. Ask the employee to check it and press "Submit
+   idea", or to say what to change.

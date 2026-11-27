@@ -1,0 +1,293 @@
+# AI Compass: EU AI Act screening
+#
+# Regulation (EU) 2024/1689. This file drives a PRELIMINARY, REASONED screening
+# of a proposed use case. It is not legal advice and it is not a conformity
+# assessment.
+#
+# Three hard rules:
+#   1. Every verdict cites the article or annex point it rests on.
+#   2. `minimal` is recorded only when the available answers support it. Missing
+#      information produces `insufficient_information`, never `minimal`.
+#   3. The business score never clears a risk gate. Article 5 blocks selection
+#      outright; high-risk blocks selection until a qualified human has
+#      reviewed it.
+#
+# Screening is advisory and is confirmed by the Data Protection Officer (E113)
+# and the Head of Quality & Regulatory (E110) before anything goes live.
+
+version: 1
+regulation: "Regulation (EU) 2024/1689 (EU AI Act)"
+disclaimer: >-
+  Preliminary screening for portfolio triage only. Not legal advice. A
+  qualified person confirms every non-minimal verdict before any build starts.
+
+verdicts: [prohibited, high_risk, high_risk_candidate, minimal, insufficient_information]
+
+# =============================================================================
+# STEP 0 - is it an AI system at all?
+# =============================================================================
+step_0_scope:
+  question: "Does the proposal involve an AI system as defined in Article 3(1)?"
+  reference: "Article 3(1)"
+  guidance: >-
+    A machine-based system that infers from input how to generate outputs. A
+    deterministic rule, a field mapping between two systems, or a SQL report is
+    not an AI system. If the AI-fit agent concluded `conventional_automation`,
+    say so here and stop: the Act does not apply, and that is a finding worth
+    stating plainly.
+  if_not_ai_system:
+    verdict: minimal
+    rationale_template: >-
+      Not an AI system within the meaning of Article 3(1): {reason}. The EU AI
+      Act imposes no obligation. Conventional automation carries the usual data
+      protection duties only.
+
+# =============================================================================
+# STEP 1 - Article 5, prohibited practices. Checked FIRST and absolutely.
+# =============================================================================
+step_1_prohibited:
+  reference: "Article 5(1)"
+  on_match:
+    verdict: prohibited
+    gate: block_selection
+    gate_reason: "Prohibited under Article 5. Not pursued regardless of business value."
+  checks:
+    - id: art5_1_a
+      reference: "Article 5(1)(a)"
+      test: "Deploys subliminal, purposefully manipulative or deceptive techniques that materially distort behaviour and cause significant harm."
+      triggers_on: [manipulation, dark patterns, nudging to a harmful choice]
+    - id: art5_1_b
+      reference: "Article 5(1)(b)"
+      test: "Exploits vulnerabilities due to age, disability or a specific social or economic situation."
+      triggers_on: [targeting children, targeting people in financial distress]
+    - id: art5_1_c
+      reference: "Article 5(1)(c)"
+      test: "Social scoring: evaluating or classifying people on social behaviour or personal traits, leading to detrimental or disproportionate treatment."
+      triggers_on: [ranking employees by general trustworthiness, scoring customers on behaviour unrelated to the service]
+    - id: art5_1_d
+      reference: "Article 5(1)(d)"
+      test: "Predicting criminal offending risk based solely on profiling or personality traits."
+      triggers_on: [predictive policing]
+    - id: art5_1_e
+      reference: "Article 5(1)(e)"
+      test: "Untargeted scraping of facial images to build or expand facial recognition databases."
+      triggers_on: [scraping faces from the web or CCTV]
+    - id: art5_1_f
+      reference: "Article 5(1)(f)"
+      test: >-
+        Inferring emotions of a natural person in the workplace or in education
+        institutions, except for medical or safety reasons.
+      triggers_on:
+        - inferring employee stress, mood, engagement or fatigue
+        - webcam, microphone, keystroke or wearable analysis of staff
+        - sentiment analysis applied to identifiable employees
+      note: >-
+        This is the single most likely Article 5 trap for an internal
+        productivity idea. The medical and safety exception is narrow and does
+        not cover wellbeing dashboards or productivity monitoring.
+      local_policy: >-
+        Also forbidden by our own AI usage policy, independently of the Act.
+    - id: art5_1_g
+      reference: "Article 5(1)(g)"
+      test: "Biometric categorisation inferring race, political opinions, trade union membership, religious beliefs, sex life or sexual orientation."
+    - id: art5_1_h
+      reference: "Article 5(1)(h)"
+      test: "Real-time remote biometric identification in publicly accessible spaces for law enforcement purposes."
+
+# =============================================================================
+# STEP 2 - Article 6, high-risk classification
+# =============================================================================
+step_2_high_risk:
+  reference: "Article 6"
+
+  annex_i_route:
+    reference: "Article 6(1) and Annex I"
+    test: >-
+      Is the AI system intended to be used as a safety component of a product
+      covered by the Annex I legislation, or is it itself such a product, where
+      that product requires third-party conformity assessment?
+    relevant_to_brambleworks: >-
+      Our sensors and gateways are radio equipment and fall under Union
+      harmonisation legislation. An AI function placed INSIDE the product and
+      acting as a safety component could therefore come through this route.
+      Internal office tooling does not. Note that our own documentation states
+      the sensors are not safety or life-protection alarms, which is a relevant
+      fact and should be cited when it applies.
+    on_match:
+      verdict: high_risk
+      gate: block_selection_pending_review
+      also_require: [conformity_plan, notified_body_question_answered]
+
+  annex_iii_route:
+    reference: "Article 6(2) and Annex III"
+    on_match:
+      verdict: high_risk_candidate
+      then: apply_derogation_test
+    points:
+      - id: annex_iii_1
+        reference: "Annex III, point 1"
+        area: "Biometrics"
+        test: "Remote biometric identification, biometric categorisation, or emotion recognition."
+        note: "Emotion recognition at work is already prohibited by Article 5(1)(f); this point covers the remaining contexts."
+      - id: annex_iii_2
+        reference: "Annex III, point 2"
+        area: "Critical infrastructure"
+        test: "Safety component in the management or operation of critical digital infrastructure, road traffic, or the supply of water, gas, heating or electricity."
+        note: >-
+          Monitoring air quality in a school building is not critical
+          infrastructure. Controlling a building's ventilation plant could edge
+          towards it; ask what the output actuates.
+      - id: annex_iii_3
+        reference: "Annex III, point 3"
+        area: "Education and vocational training"
+        test: "Admission decisions, evaluating learning outcomes, assessing the appropriate level of education, or monitoring prohibited behaviour during tests."
+        note: >-
+          Our customers are schools, but we do not assess pupils. Selling
+          sensors to a school does not engage this point. It would engage if a
+          feature started evaluating pupils or staff.
+      - id: annex_iii_4
+        reference: "Annex III, point 4"
+        area: "Employment and workers management"
+        test:
+          - "(a) Recruitment or selection: targeted job advertising, filtering applications, evaluating candidates."
+          - "(b) Decisions on terms, promotion or termination; allocating tasks based on individual behaviour or personal traits; monitoring and evaluating performance and behaviour."
+        note: >-
+          The most likely high-risk route for an internal idea. CV screening,
+          candidate ranking, performance scoring and behaviour-based task
+          allocation all land here.
+        local_policy: >-
+          Our AI usage policy forbids AI-made or AI-ranked people decisions
+          outright, and the decision log records this (2026-09-21). So such an
+          idea fails on internal policy before the Act is even reached - say
+          both.
+      - id: annex_iii_5
+        reference: "Annex III, point 5"
+        area: "Essential services"
+        test: "Eligibility for public assistance, creditworthiness and credit scoring, risk assessment and pricing in life and health insurance, or emergency call triage and dispatch."
+        note: "Customer credit checks before granting payment terms would engage point 5(b)."
+      - id: annex_iii_6
+        reference: "Annex III, point 6"
+        area: "Law enforcement"
+      - id: annex_iii_7
+        reference: "Annex III, point 7"
+        area: "Migration, asylum and border control"
+      - id: annex_iii_8
+        reference: "Annex III, point 8"
+        area: "Justice and democratic processes"
+
+  # Not every Annex III system is high-risk. This test is why ordinary internal
+  # tooling stays out, and it must be applied explicitly rather than assumed.
+  derogation_test:
+    reference: "Article 6(3)"
+    test: >-
+      An Annex III system is NOT high-risk where it does not pose a significant
+      risk of harm to health, safety or fundamental rights, because it:
+    conditions:
+      - "performs a narrow procedural task; or"
+      - "improves the result of a previously completed human activity; or"
+      - "detects decision-making patterns or deviations from prior patterns, without replacing or influencing the previously completed human assessment; or"
+      - "performs a preparatory task to an assessment relevant to an Annex III use case."
+    hard_exception:
+      reference: "Article 6(3), final subparagraph"
+      rule: >-
+        The derogation never applies where the system performs profiling of
+        natural persons. If profiling is present, the system is high-risk.
+    on_derogation_applies:
+      verdict: minimal
+      require: [documented_reasoning, named_condition]
+      note: >-
+        Record WHICH condition applies and why. A provider relying on the
+        derogation must document that assessment.
+    on_derogation_fails:
+      verdict: high_risk
+      gate: block_selection_pending_review
+      also_require: [article_14_human_oversight_plan, fundamental_rights_consideration]
+
+# =============================================================================
+# STEP 3 - Article 50, transparency. A SEPARATE flag, not a risk level.
+# =============================================================================
+step_3_transparency:
+  reference: "Article 50"
+  independent: true
+  note: >-
+    Reported as its own flag because it can apply on top of any risk level,
+    including high-risk, and can also be the only obligation a minimal-risk
+    system carries. It is never a substitute for a risk verdict and never
+    cancels one.
+  checks:
+    - id: art50_1
+      reference: "Article 50(1)"
+      test: "The system interacts directly with natural persons."
+      obligation: "Inform the person that they are interacting with an AI system, unless it is obvious to a reasonably well-informed person."
+      triggers_on: [customer-facing chatbot, assistant answering customer email, automated first reply on a ticket]
+    - id: art50_2
+      reference: "Article 50(2)"
+      test: "The system generates synthetic audio, image, video or text."
+      obligation: "Mark outputs in a machine-readable format as artificially generated or manipulated."
+      triggers_on: [generated marketing copy, generated case studies, generated images, translated content published as our own]
+    - id: art50_3
+      reference: "Article 50(3)"
+      test: "Emotion recognition or biometric categorisation."
+      obligation: "Inform the exposed persons of the operation of the system."
+      note: "In a workplace this is normally moot, because Article 5(1)(f) prohibits it outright."
+    - id: art50_4
+      reference: "Article 50(4)"
+      test: "Deep fakes, or AI-generated text published to inform the public on matters of public interest."
+      obligation: "Disclose that the content is artificially generated or manipulated."
+
+# =============================================================================
+# Gaps and review routing
+# =============================================================================
+insufficient_information:
+  # Which missing core field blocks which verdict. The point is that we would
+  # rather say "we cannot tell yet" than guess a classification.
+  blocks_verdict_when_missing:
+    intended_purpose: [prohibited, high_risk, minimal]
+    users_affected: [high_risk, minimal]
+    deployment_context: [article_50]
+    human_oversight: [high_risk, minimal]
+    data: [minimal]
+  on_insufficient:
+    verdict: insufficient_information
+    gate: block_selection_pending_review
+    action: raise_review_item
+    rationale_template: >-
+      Cannot classify: {missing_fields} not provided. {what_each_would_decide}.
+      Asked of the submitter rather than assumed.
+
+review_routing:
+  prohibited:
+    notify: [E113, E110, E26]
+    severity: high
+    message: "Article 5 screening matched. Confirm and record the rejection."
+  high_risk:
+    notify: [E113, E110]
+    severity: high
+    message: "Potential high-risk classification. Qualified legal review needed before any build."
+  high_risk_candidate:
+    notify: [E113]
+    severity: medium
+    message: "Annex III area touched; Article 6(3) derogation assessment needed."
+  article_50_flagged:
+    notify: [E113]
+    severity: low
+    message: "Transparency obligation applies. Confirm the disclosure wording."
+  insufficient_information:
+    notify: [E26]
+    severity: medium
+    message: "Submitter needs to answer the missing fields before screening can conclude."
+
+# What every screening output must contain, or it is rejected as unexplained.
+output_contract:
+  required_fields:
+    - article_5: "{verdict, matched_check_id or none, citation, rationale}"
+    - high_risk: "{verdict, route (annex_i|annex_iii|none), matched_point, derogation_applied, citation, rationale}"
+    - article_50: "{applies: bool, matched_checks, obligation, citation}"
+    - evidence: "quoted from the submitted answers only"
+    - gaps: "list of missing fields that limited the screening"
+    - human_review: "{required: bool, who, why}"
+  rules:
+    - "Quote the submitter's own words as evidence. Do not paraphrase into certainty."
+    - "Cite the article or annex point for every verdict, including `minimal`."
+    - "Never output `minimal` where a required field is missing."
+    - "State the local policy position where one exists, separately from the Act."
