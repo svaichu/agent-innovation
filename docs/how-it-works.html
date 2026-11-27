@@ -1,0 +1,1672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Compass — how it works</title>
+<style>
+:root{
+  --ink:#16191d; --ink2:#444c56; --ink3:#6b7480;
+  --bg:#fbfbfa; --card:#fff; --line:#e3e5e8;
+  --accent:#1f6feb; --accent-soft:#eaf2ff;
+  --green:#1a7f4b; --green-soft:#e7f5ed;
+  --amber:#8a5a00; --amber-soft:#fdf3e2;
+  --red:#b3261e; --red-soft:#fdeceb;
+  --grey-soft:#f1f2f4;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth; scroll-padding-top:68px}
+body{margin:0;background:var(--bg);color:var(--ink);font:15.5px/1.65 var(--sans);
+     -webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+
+/* ---------- nav ---------- */
+nav{position:sticky;top:0;z-index:50;background:rgba(251,251,250,.94);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 22px}
+nav b{font-size:13px;margin-right:6px;white-space:nowrap}
+nav a{font-size:12.5px;color:var(--ink3);text-decoration:none;padding:4px 7px;
+      border-radius:5px;white-space:nowrap}
+nav a:hover{background:var(--grey-soft);color:var(--ink)}
+nav a.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+/* ---------- header ---------- */
+header{padding:46px 0 30px;border-bottom:1px solid var(--line);background:var(--card)}
+h1{font-size:30px;margin:0 0 8px;letter-spacing:-.4px}
+.sub{color:var(--ink2);font-size:16px;max-width:70ch;margin:0}
+.meta{margin-top:18px;font-size:12.5px;color:var(--ink3);font-family:var(--mono)}
+
+/* ---------- sections ---------- */
+section{padding:40px 0;border-bottom:1px solid var(--line)}
+h2{font-size:21px;margin:0 0 4px;letter-spacing:-.2px}
+h2 .n{color:var(--ink3);font-weight:400;font-family:var(--mono);font-size:15px;margin-right:8px}
+h3{font-size:15.5px;margin:26px 0 8px}
+h4{font-size:13.5px;margin:18px 0 6px;color:var(--ink2);text-transform:uppercase;
+   letter-spacing:.5px}
+p{margin:10px 0;max-width:76ch}
+.lede{color:var(--ink2);margin:0 0 18px;max-width:76ch}
+ul,ol{max-width:76ch;padding-left:22px}
+li{margin:5px 0}
+
+/* ---------- bits ---------- */
+code{font-family:var(--mono);font-size:.88em;background:var(--grey-soft);
+     padding:1px 5px;border-radius:4px}
+dfn{font-style:normal;font-weight:600;border-bottom:1.5px dotted var(--accent);
+    cursor:help}
+.card{background:var(--card);border:1px solid var(--line);border-radius:9px;
+      padding:16px 18px;margin:14px 0}
+.note{background:var(--accent-soft);border:1px solid #cfe0ff;border-radius:9px;
+      padding:13px 16px;margin:14px 0;font-size:14.5px}
+.warn{background:var(--amber-soft);border:1px solid #f0dcb4;border-radius:9px;
+      padding:13px 16px;margin:14px 0;font-size:14.5px}
+.gap{background:var(--red-soft);border:1px solid #f5cdca;border-radius:9px;
+     padding:13px 16px;margin:14px 0;font-size:14.5px}
+.gap b,.warn b{color:inherit}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.cols{grid-template-columns:1fr}}
+
+/* ---------- code blocks ---------- */
+figure{margin:14px 0}
+figcaption{font-family:var(--mono);font-size:11.5px;color:var(--ink3);
+           background:var(--grey-soft);border:1px solid var(--line);
+           border-bottom:none;border-radius:7px 7px 0 0;padding:6px 11px}
+pre{margin:0;background:#1b1f24;color:#e6edf3;border-radius:0 0 7px 7px;
+    padding:13px 14px;overflow-x:auto;font-family:var(--mono);
+    font-size:12.5px;line-height:1.55}
+pre.lite{background:var(--card);color:var(--ink);border:1px solid var(--line);
+         border-top:none}
+.k{color:#ff7b72}.s{color:#a5d6ff}.c{color:#8b949e;font-style:italic}
+.f{color:#d2a8ff}.n2{color:#79c0ff}
+
+/* ---------- tables ---------- */
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:12px 0;
+      background:var(--card)}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);
+      vertical-align:top}
+th{background:var(--grey-soft);font-size:12px;text-transform:uppercase;
+   letter-spacing:.4px;color:var(--ink2);font-weight:600}
+td code{font-size:11.5px}
+.scroll{overflow-x:auto}
+
+/* ---------- pills ---------- */
+.pill{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 7px;
+      border-radius:20px;font-weight:600;white-space:nowrap}
+.p-ok{background:var(--green-soft);color:var(--green)}
+.p-warn{background:var(--amber-soft);color:var(--amber)}
+.p-bad{background:var(--red-soft);color:var(--red)}
+.p-mute{background:var(--grey-soft);color:var(--ink3)}
+.p-info{background:var(--accent-soft);color:var(--accent)}
+
+/* ---------- diagram ---------- */
+.diagram{background:var(--card);border:1px solid var(--line);border-radius:9px;
+         padding:6px;margin:16px 0}
+svg{display:block;width:100%;height:auto}
+.hit{cursor:pointer}
+.hit rect,.hit circle{transition:filter .15s,stroke-width .15s}
+.hit:hover rect,.hit:hover circle{filter:brightness(.96);stroke-width:2.5}
+.hit.sel rect,.hit.sel circle{stroke:var(--accent);stroke-width:3}
+.panel{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--accent);
+       border-radius:7px;padding:14px 16px;margin-top:12px;font-size:14px;min-height:92px}
+.panel h5{margin:0 0 6px;font-size:14.5px}
+.panel .where{font-family:var(--mono);font-size:11.5px;color:var(--ink3);margin:6px 0}
+.panel .like{background:var(--grey-soft);border-radius:5px;padding:7px 10px;
+             margin-top:8px;font-size:13px}
+.flow{stroke:var(--ink3);stroke-width:1.6;fill:none;marker-end:url(#ar)}
+.flow.dash{stroke-dasharray:5 4;animation:march 1s linear infinite}
+@keyframes march{to{stroke-dashoffset:-18}}
+.lbl{font:10.5px var(--mono);fill:var(--ink3)}
+.bx{font:12px var(--sans);fill:var(--ink);font-weight:600}
+.bx2{font:10px var(--mono);fill:var(--ink3)}
+
+/* ---------- stepper ---------- */
+.steps{display:flex;gap:6px;flex-wrap:wrap;margin:16px 0 0}
+.steps button{font:12.5px/1 var(--sans);padding:8px 12px;border:1px solid var(--line);
+              background:var(--card);border-radius:6px;cursor:pointer;color:var(--ink2)}
+.steps button:hover{background:var(--grey-soft)}
+.steps button.on{background:var(--accent);border-color:var(--accent);color:#fff;
+                 font-weight:600}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:9px;
+       padding:18px;margin-top:12px}
+.stage h4:first-child{margin-top:0}
+.tabs{display:flex;gap:4px;margin:14px 0 0;border-bottom:1px solid var(--line)}
+.tabs button{font:12px var(--sans);padding:7px 11px;border:none;background:none;
+             cursor:pointer;color:var(--ink3);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.tabbody{padding-top:4px}
+.hide{display:none}
+
+/* ---------- graph ---------- */
+.glegend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink2);
+         margin:10px 0}
+.glegend span{display:flex;align-items:center;gap:5px}
+.dot{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+/* ---------- cheat ---------- */
+.cheat{background:var(--card);border:2px solid var(--ink);border-radius:10px;padding:22px}
+.cheat h3{margin-top:0}
+.cheat ol{padding-left:20px}
+.cheat .big{font-size:17px;font-weight:600;line-height:1.5;margin:0 0 14px}
+footer{padding:34px 0 60px;color:var(--ink3);font-size:13px}
+</style>
+</head>
+<body>
+
+<nav><div class="wrap">
+  <b>How it works</b>
+  <a href="#s1">1 Big picture</a>
+  <a href="#s2">2 Graph</a>
+  <a href="#s3">3 Intake</a>
+  <a href="#s4">4 Record</a>
+  <a href="#s5">5 Pipeline</a>
+  <a href="#s6">6 Risk gate</a>
+  <a href="#s7">7 Board</a>
+  <a href="#s8">8 Re-weighting</a>
+  <a href="#s9">9 Chat</a>
+  <a href="#s10">10 Concepts</a>
+  <a href="#s11">11 LLM calls</a>
+  <a href="#s12">12 Cheat sheet</a>
+</div></nav>
+
+<header><div class="wrap">
+  <h1>AI Compass, explained by following one idea</h1>
+  <p class="sub">You know web apps, LLMs and RAG. This page adds the three things
+  that are new here — the knowledge graph, what we mean by “agent”, and how the
+  pieces fit — by following a single real submission,
+  <code>RI-0001</code>, from the moment an employee types it to the moment it
+  appears on the decision board.</p>
+  <p class="meta">Every number, JSON blob, graph node and code snippet on this page was
+  read out of this repository and out of <code>compass.db</code>. Nothing is invented.
+  Where the code does not answer a question, the page says so in a red box.</p>
+</div></header>
+
+<!-- ===================================================== 1 -->
+<section id="s1"><div class="wrap">
+  <h2><span class="n">1</span>Big picture</h2>
+  <p class="lede">There are <b>two web apps</b>, a folder of text files, one
+  SQLite database, and a batch script that joins them. Click any box.</p>
+  <div class="note"><b>One port or two.</b> The two apps were built separately and
+  originally ran on two ports with two separate logins — so a demo meant signing in
+  twice, and you could end up logged in as two different people in two tabs.
+  <code>python -m compass.serve</code> now mounts both on
+  <b>http://127.0.0.1:7860</b>: the board at <code>/</code>, the idea chat at
+  <code>/intake/</code>, behind <b>one login</b>. They can still be run alone on
+  :7861 and :7860. The diagram below shows the parts, not the ports.</div>
+
+  <div class="diagram">
+  <svg viewBox="0 0 1000 520" id="arch" role="img" aria-label="Architecture diagram">
+    <defs>
+      <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6"
+              markerHeight="6" orient="auto-start-reverse">
+        <path d="M0 0 L10 5 L0 10 z" fill="#6b7480"/>
+      </marker>
+    </defs>
+
+    <!-- lane labels -->
+    <text class="lbl" x="8" y="16">WRITE PATH — a person submits an idea</text>
+    <text class="lbl" x="8" y="196">BUILD PATH — batch script, run by hand</text>
+    <text class="lbl" x="8" y="406">READ PATH — the board looks at results</text>
+
+    <!-- row 1 -->
+    <g class="hit" data-k="emp"><rect x="20" y="30" width="120" height="58" rx="8"
+       fill="#f1f2f4" stroke="#d6d9dd"/>
+       <text class="bx" x="80" y="55" text-anchor="middle">Employee</text>
+       <text class="bx2" x="80" y="72" text-anchor="middle">E17 Luis Ortega</text></g>
+
+    <g class="hit" data-k="intake"><rect x="190" y="30" width="190" height="58" rx="8"
+       fill="#eaf2ff" stroke="#9dc0f5"/>
+       <text class="bx" x="285" y="52" text-anchor="middle">Intake chat app</text>
+       <text class="bx2" x="285" y="70" text-anchor="middle">:7860 · Gradio + agent</text></g>
+
+    <g class="hit" data-k="raw"><rect x="430" y="30" width="190" height="58" rx="8"
+       fill="#e7f5ed" stroke="#a6d7bd"/>
+       <text class="bx" x="525" y="52" text-anchor="middle">RI-0001.md</text>
+       <text class="bx2" x="525" y="70" text-anchor="middle">a markdown file</text></g>
+
+    <g class="hit" data-k="openai"><rect x="690" y="30" width="190" height="58" rx="8"
+       fill="#fdf3e2" stroke="#e8cb94"/>
+       <text class="bx" x="785" y="52" text-anchor="middle">LLM provider</text>
+       <text class="bx2" x="785" y="70" text-anchor="middle">OpenAI / Anthropic / none</text></g>
+
+    <path class="flow" d="M140 59 H186"/>
+    <path class="flow dash" d="M380 59 H426"/>
+    <path class="flow dash" d="M380 45 C 500 -5, 660 0, 783 26"/>
+    <text class="lbl" x="560" y="16" text-anchor="middle">needs a key</text>
+
+    <!-- row 2 -->
+    <g class="hit" data-k="kb"><rect x="20" y="215" width="170" height="70" rx="8"
+       fill="#f1f2f4" stroke="#d6d9dd"/>
+       <text class="bx" x="105" y="240" text-anchor="middle">knowledge-base/</text>
+       <text class="bx2" x="105" y="257" text-anchor="middle">46 .md and .csv files</text>
+       <text class="bx2" x="105" y="272" text-anchor="middle">the company, written down</text></g>
+
+    <g class="hit" data-k="cfg"><rect x="20" y="305" width="170" height="64" rx="8"
+       fill="#f1f2f4" stroke="#d6d9dd"/>
+       <text class="bx" x="105" y="329" text-anchor="middle">config/*.yaml</text>
+       <text class="bx2" x="105" y="346" text-anchor="middle">questions, scoring,</text>
+       <text class="bx2" x="105" y="360" text-anchor="middle">EU AI Act tree</text></g>
+
+    <g class="hit" data-k="load"><rect x="245" y="240" width="165" height="62" rx="8"
+       fill="#eaf2ff" stroke="#9dc0f5"/>
+       <text class="bx" x="327" y="264" text-anchor="middle">seed/load.py</text>
+       <text class="bx2" x="327" y="281" text-anchor="middle">batch job you run</text>
+       <text class="bx2" x="327" y="295" text-anchor="middle">by hand</text></g>
+
+    <g class="hit" data-k="ingest"><rect x="455" y="190" width="160" height="56" rx="8"
+       fill="#eaf2ff" stroke="#9dc0f5"/>
+       <text class="bx" x="535" y="213" text-anchor="middle">kg/ingest.py</text>
+       <text class="bx2" x="535" y="230" text-anchor="middle">files → graph</text></g>
+
+    <g class="hit" data-k="pipe"><rect x="455" y="268" width="160" height="78" rx="8"
+       fill="#eaf2ff" stroke="#9dc0f5"/>
+       <text class="bx" x="535" y="291" text-anchor="middle">5 pipeline steps</text>
+       <text class="bx2" x="535" y="308" text-anchor="middle">similarity · AI fit · risk</text>
+       <text class="bx2" x="535" y="322" text-anchor="middle">feasibility · score</text>
+       <text class="bx2" x="535" y="337" text-anchor="middle">compass/agents/</text></g>
+
+    <g class="hit" data-k="db"><rect x="690" y="225" width="190" height="86" rx="8"
+       fill="#e7f5ed" stroke="#a6d7bd"/>
+       <text class="bx" x="785" y="249" text-anchor="middle">compass.db</text>
+       <text class="bx2" x="785" y="266" text-anchor="middle">SQLite · 19 tables</text>
+       <text class="bx2" x="785" y="281" text-anchor="middle">graph + chunks +</text>
+       <text class="bx2" x="785" y="296" text-anchor="middle">assessments</text></g>
+
+    <path class="flow" d="M190 250 H241"/>
+    <path class="flow" d="M190 334 C 215 334, 225 300, 241 288"/>
+    <path class="flow" d="M410 258 C 430 240, 440 220, 451 216"/>
+    <path class="flow" d="M410 282 C 430 292, 440 300, 451 303"/>
+    <path class="flow dash" d="M615 218 C 650 222, 670 230, 686 243"/>
+    <path class="flow dash" d="M615 300 C 650 300, 670 296, 686 290"/>
+    <path class="flow dash" d="M690 160 C 640 120, 560 150, 537 264"/>
+    <text class="lbl" x="700" y="150">key optional here</text>
+    <path class="flow" d="M525 92 C 525 130, 530 160, 533 186"/>
+    <text class="lbl" x="540" y="140">the idea file</text>
+
+    <!-- row 3 -->
+    <g class="hit" data-k="board"><rect x="245" y="430" width="200" height="62" rx="8"
+       fill="#eaf2ff" stroke="#9dc0f5"/>
+       <text class="bx" x="345" y="454" text-anchor="middle">Board app</text>
+       <text class="bx2" x="345" y="471" text-anchor="middle">:7861 · compass/app.py</text>
+       <text class="bx2" x="345" y="485" text-anchor="middle">no model is called here</text></g>
+
+    <g class="hit" data-k="views"><rect x="500" y="430" width="175" height="62" rx="8"
+       fill="#eaf2ff" stroke="#9dc0f5"/>
+       <text class="bx" x="587" y="454" text-anchor="middle">views.py</text>
+       <text class="bx2" x="587" y="471" text-anchor="middle">access rules live</text>
+       <text class="bx2" x="587" y="485" text-anchor="middle">here, not in the UI</text></g>
+
+    <g class="hit" data-k="people"><rect x="730" y="430" width="200" height="62" rx="8"
+       fill="#f1f2f4" stroke="#d6d9dd"/>
+       <text class="bx" x="830" y="454" text-anchor="middle">4 admins · 17 reviewers</text>
+       <text class="bx2" x="830" y="471" text-anchor="middle">99 employees</text>
+       <text class="bx2" x="830" y="485" text-anchor="middle">they decide, not the agent</text></g>
+
+    <path class="flow" d="M785 311 C 785 370, 420 380, 348 426"/>
+    <path class="flow" d="M445 461 H496"/>
+    <path class="flow" d="M675 461 H726"/>
+  </svg>
+  </div>
+  <div class="panel" id="archPanel">
+    <h5>Click a box in the diagram</h5>
+    <p style="margin:0;color:var(--ink2)">Each one tells you what it does, which file
+    implements it, and what it would be called in an ordinary web app.</p>
+  </div>
+
+  <h3>The one thing that is not like a normal web app</h3>
+  <p>In a normal app, the user clicks something and the backend computes the answer
+  right then. Here the heavy thinking happens in a <b>batch script you run from the
+  terminal</b> (<code>seed/load.py</code>), and the result is written to the database.
+  The board app only <i>reads</i> what the batch already decided. That is why the board
+  is instant and why it needs no API key.</p>
+  <div class="warn"><b>So the flow is not request → think → respond.</b>
+  It is: idea file on disk → you run <code>python -m seed.load</code> → rows in
+  <code>compass.db</code> → board reads rows. If someone submits an idea and nobody
+  re-runs the batch, it will not appear on the board.</div>
+</div></section>
+
+<!-- ===================================================== 2 -->
+<section id="s2"><div class="wrap">
+  <h2><span class="n">2</span>From a folder of text files to a knowledge graph</h2>
+  <p class="lede">This is the part that is probably new to you. It is simpler than it
+  sounds, and there is no machine learning in it at all.</p>
+
+  <h3>Three words, defined once</h3>
+  <table>
+    <tr><th style="width:90px">Word</th><th>What it means here</th><th>Example from this repo</th></tr>
+    <tr><td><dfn title="A thing">node</dfn></td>
+        <td>One <b>thing</b> — a person, a team, a dataset, a policy. A row in the
+            <code>kg_node</code> table.</td>
+        <td><code>employee:E17</code> = Luis Ortega</td></tr>
+    <tr><td><dfn title="A relationship">edge</dfn></td>
+        <td>One <b>relationship between two things</b>, with a direction and a name.
+            A row in <code>kg_edge</code>.</td>
+        <td><code>employee:E17 --member_of--&gt; department:support</code></td></tr>
+    <tr><td><dfn title="A passage of text">chunk</dfn></td>
+        <td>One <b>passage of prose</b>, kept whole so it can be searched and quoted.
+            A row in <code>kb_chunk</code>. This is the part you already know as RAG.</td>
+        <td>the “Not allowed” section of <code>policies/ai-usage.md</code>, 446 characters</td></tr>
+  </table>
+
+  <p>So a knowledge graph is just <b>two tables</b>: things, and links between things.
+  You already know how to query two tables. The value is not the technology — it is
+  that a question like <i>“does anyone here know how to do this?”</i> becomes a
+  <code>SELECT</code> instead of a guess.</p>
+
+  <h3>What <code>kg/ingest.py</code> actually produces</h3>
+  <p>It reads the <code>.md</code> and <code>.csv</code> files, parses their tables and
+  bullet lists with plain Python, and inserts rows. No model is involved. Real counts
+  from <code>compass.db</code> right now:</p>
+  <div class="cols">
+    <div>
+      <h4>465 nodes</h4>
+      <table>
+        <tr><th>Type</th><th style="width:60px">Count</th></tr>
+        <tr><td>Skill</td><td>201</td></tr>
+        <tr><td>Employee</td><td>120</td></tr>
+        <tr><td>PainPoint</td><td>47</td></tr>
+        <tr><td>Dataset</td><td>16</td></tr>
+        <tr><td>System</td><td>16</td></tr>
+        <tr><td>Project</td><td>14</td></tr>
+        <tr><td>Decision</td><td>12</td></tr>
+        <tr><td>Department</td><td>9</td></tr>
+        <tr><td>Process</td><td>9</td></tr>
+        <tr><td>Constraint / Policy / StrategyPriority</td><td>6 each</td></tr>
+        <tr><td>Site</td><td>3</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4>769 edges</h4>
+      <table>
+        <tr><th>Relationship</th><th style="width:60px">Count</th></tr>
+        <tr><td><code>has_skill</code></td><td>293</td></tr>
+        <tr><td><code>member_of</code></td><td>120</td></tr>
+        <tr><td><code>located_at</code></td><td>120</td></tr>
+        <tr><td><code>reports_to</code></td><td>119</td></tr>
+        <tr><td><code>suffers</code></td><td>47</td></tr>
+        <tr><td><code>owns</code></td><td>47</td></tr>
+        <tr><td><code>leads</code></td><td>14</td></tr>
+        <tr><td><code>stores_dataset</code></td><td>9</td></tr>
+      </table>
+      <h4>163 chunks</h4>
+      <p style="font-size:13.5px;margin-top:4px">One per heading across the knowledge
+      base. Raw ideas are deliberately excluded, so one employee's idea can never be
+      answered back to another as if it were company policy.</p>
+    </div>
+  </div>
+
+  <figure>
+    <figcaption>compass/kg/ingest.py:110–124 — how a node is written. Just an INSERT.</figcaption>
+<pre><span class="k">def</span> <span class="f">node</span>(self, node_id, node_type, name,
+         attrs=<span class="k">None</span>, classification=<span class="s">"internal"</span>, source_path=<span class="s">""</span>):
+    self.conn.execute(
+        <span class="s">"INSERT INTO kg_node (id, type, name, attrs, classification, source_path) "</span>
+        <span class="s">"VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET "</span>
+        <span class="s">"attrs = excluded.attrs, name = excluded.name, "</span>
+        <span class="s">"classification = excluded.classification, "</span>
+        <span class="s">"source_path = excluded.source_path"</span>,
+        (node_id, node_type, name,
+         json.dumps(attrs <span class="k">or</span> {}, ensure_ascii=<span class="k">False</span>),
+         classification, source_path),
+    )</pre>
+  </figure>
+  <p>Note <code>source_path</code>. Every node remembers which file it came from, which
+  is what lets the pipeline cite its evidence later.</p>
+
+  <h3>A real slice of the graph</h3>
+  <p>These 12 nodes and 14 edges are copied out of <code>compass.db</code> verbatim —
+  the neighbourhood around the person who submitted our example idea. Click a node.</p>
+  <div class="glegend">
+    <span><i class="dot" style="background:#1f6feb"></i>Employee</span>
+    <span><i class="dot" style="background:#1a7f4b"></i>Department / Site</span>
+    <span><i class="dot" style="background:#8a5a00"></i>System / Dataset</span>
+    <span><i class="dot" style="background:#7c4dff"></i>Skill</span>
+    <span><i class="dot" style="background:#b3261e"></i>PainPoint / Priority / Project</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 1000 440" id="kgraph" role="img" aria-label="Knowledge graph slice"></svg>
+  </div>
+  <div class="panel" id="kgPanel">
+    <h5>Click a node above</h5>
+    <p style="margin:0;color:var(--ink2)">You will see its real type, its stored
+    attributes, and the file it was built from.</p>
+  </div>
+
+  <div class="gap"><b>One honest detail.</b> <code>project:P02</code> “Help centre
+  refresh” is drawn unconnected. There is no edge between it and the support team in
+  the database — the only <code>leads</code> edge points from <code>employee:E86</code>.
+  The pipeline still found P02 for our idea, but by <b>matching words</b>
+  (<code>related_projects()</code> in <code>kg/query.py</code>), not by walking the
+  graph. So: some questions here are answered by edges, others by text matching. Do not
+  claim the graph does all of it.</div>
+</div></section>
+
+<!-- ===================================================== 3 -->
+<section id="s3"><div class="wrap">
+  <h2><span class="n">3</span>The intake chat: how RI-0001 got written</h2>
+  <p class="lede">This is the one place in the project with a <b>real agent</b> in the
+  full sense — a model that decides for itself when to call a tool, in a loop.</p>
+
+  <h3>What runs</h3>
+  <ul>
+    <li><code>employee_interface/app.py</code> — a Gradio chat, at <b>/intake/</b> under the combined server or <b>:7860</b> on its own.</li>
+    <li>It uses the <b>OpenAI Agents SDK</b> (<code>from agents import Agent, Runner,
+        function_tool</code>). The model is given one tool, <code>propose_idea</code>,
+        and loops until it decides to call it.</li>
+    <li><code>employee_interface/idea_store.py</code> writes the markdown file.</li>
+  </ul>
+  <div class="warn"><b>This app cannot run without <code>OPENAI_API_KEY</code>.</b>
+  The page loads and login works, but typing a message raises
+  <code>openai.OpenAIError: Missing credentials</code>. Unlike the evaluation side, it
+  has no offline fallback.</div>
+
+  <h3>What tells it which questions to ask</h3>
+  <p>You would expect <code>config/intake-questionnaire.yaml</code>. It does not.</p>
+  <div class="gap"><b>Verified gap.</b> <code>employee_interface/</code> imports only
+  <code>csv, json, re, datetime, itertools, pathlib, typing, pydantic, gradio,
+  agents, openai</code>. It never reads <code>config/</code> and never imports
+  <code>compass/</code>. Its question list is <b>hard-coded in a Python string</b>
+  (<code>INSTRUCTIONS</code>, <code>app.py:13–42</code>) and its shape is the 7-field
+  <code>IdeaDraft</code> model. The YAML governs the <i>evaluation</i> side only. The
+  two are not wired together yet — see
+  <code>compass/proposals/idea-draft-8-fields.md</code>.</div>
+
+  <figure>
+    <figcaption>employee_interface/app.py:16–23 — the hard-coded checklist (6 items)</figcaption>
+<pre class="lite">Before an idea can be submitted you need all of this:
+- scope: a company process, or the employee's own workflow
+- the current process: how it works today
+- the problem with it
+- the proposed improvement
+- who is affected
+- the expected benefit, for example time saved or fewer errors</pre>
+  </figure>
+
+  <figure>
+    <figcaption>employee_interface/app.py:26–30 — the two rules that matter most</figcaption>
+<pre class="lite">- Check what the employee has already said, then ask for what is missing or too
+  vague to understand. Ask one short question at a time.
+- Use only what the employee said. Never invent or embellish details. If they do
+  not know something after being asked, record it as unknown.</pre>
+  </figure>
+
+  <p>The tool is what makes it an agent rather than a chatbot. The model calls it when
+  it believes nothing is missing; the function refuses if a field is empty, and the
+  refusal text goes back to the model as a new instruction:</p>
+  <figure>
+    <figcaption>employee_interface/app.py:49–59 — the one tool, and its guard</figcaption>
+<pre><span class="f">@function_tool</span>
+<span class="k">def</span> <span class="f">propose_idea</span>(context, draft: IdeaDraft) -&gt; str:
+    <span class="c">"""Show the employee a complete idea draft to check and submit."""</span>
+    <span class="k">if</span> missing := draft.missing_fields():
+        <span class="k">return</span> <span class="s">f"Not shown. Ask the employee about: {', '.join(missing)}."</span>
+    context.context.draft = draft
+    <span class="k">return</span> <span class="s">"The draft is shown below your reply. It is not stored yet."</span></pre>
+  </figure>
+  <p>And crucially, the model <b>cannot save anything</b>. Only the human pressing
+  “Submit idea” calls <code>save_raw_idea()</code>. The file is written with
+  <code>open(..., "x")</code>, so a file is never overwritten; if the ID is taken it
+  tries the next number.</p>
+
+  <h3>The real file it produced</h3>
+  <figure>
+    <figcaption>knowledge-base/ideas/raw/RI-0001.md — the complete file, verbatim</figcaption>
+<pre class="lite">---
+title: "Find the right help centre article faster"
+owner: E17
+classification: internal
+last_updated: 2026-11-27
+type: raw_idea
+id: RI-0001
+author_id: E17
+created_at: 2026-11-27T00:13:52+01:00
+---
+
+# Find the right help centre article faster
+
+## Scope
+company process
+
+## Current process
+When a ticket arrives I search the help centre by hand and usually open five
+articles before finding the right one.
+
+## Problem
+About 40% of our 1,250 tickets a month are repeat questions, and finding the
+matching article takes two or three minutes each time.
+
+## Proposed improvement
+Suggest the three most likely help centre articles for each incoming ticket, so
+the specialist can pick one instead of searching.
+
+## Who is affected
+The ten support specialists. Customers get a faster first reply.
+
+## Expected benefit
+Saves maybe two minutes on 500 tickets a month, so about 16 hours.</pre>
+  </figure>
+  <div class="note"><b>Why a file and not a database row?</b> These are the employee's
+  own words, and the design treats them as evidence: never edited by an agent, greppable,
+  reviewable in a pull request. Everything downstream is derived and can be rebuilt.
+  Delete <code>compass.db</code> and nothing a human wrote is lost.</div>
+</div></section>
+
+<!-- ===================================================== 4 -->
+<section id="s4"><div class="wrap">
+  <h2><span class="n">4</span>Turning the file into a record</h2>
+  <p class="lede"><code>compass/records.py</code> parses the markdown into the brief's
+  <b>8 core fields</b>. The interesting part is what it does about the fields the intake
+  chat never asked for.</p>
+
+  <p>It maps four headings straight across, and then <b>forces the other four to
+  “missing”</b> rather than inferring them:</p>
+  <figure>
+    <figcaption>compass/records.py:30–42</figcaption>
+<pre><span class="c"># employee_interface section heading -> core field key.</span>
+SECTION_TO_CORE = {
+    <span class="s">"Problem"</span>:              <span class="s">"problem"</span>,
+    <span class="s">"Proposed improvement"</span>: <span class="s">"intended_purpose"</span>,
+    <span class="s">"Who is affected"</span>:      <span class="s">"users_affected"</span>,
+    <span class="s">"Expected benefit"</span>:     <span class="s">"expected_benefit"</span>,
+}
+<span class="c"># Sections that give useful context but are not a core field on their own.</span>
+CONTEXT_SECTIONS = [<span class="s">"Scope"</span>, <span class="s">"Current process"</span>]
+
+NOT_COLLECTED_BY_EMPLOYEE_INTERFACE = [
+    <span class="s">"deployment_context"</span>, <span class="s">"data"</span>, <span class="s">"effort"</span>, <span class="s">"human_oversight"</span>,
+]</pre>
+  </figure>
+
+  <h3>The four states</h3>
+  <table>
+    <tr><th style="width:110px">State</th><th>Means</th><th>Effect downstream</th></tr>
+    <tr><td><span class="pill p-ok">provided</span></td><td>A usable answer.</td><td>Can be used as evidence.</td></tr>
+    <tr><td><span class="pill p-warn">unclear</span></td><td>They answered, but too briefly to evaluate — below <code>min_words</code> in the YAML.</td><td>Treated as not usable.</td></tr>
+    <tr><td><span class="pill p-bad">missing</span></td><td>Not provided, or they said “I don't know”.</td><td>Becomes a review item assigned to a person. Blocks a “minimal risk” verdict.</td></tr>
+    <tr><td><span class="pill p-mute">assumed</span></td><td>An agent filled it in.</td><td>Shown as such, and <b>never</b> counts as evidence.</td></tr>
+  </table>
+
+  <figure>
+    <figcaption>compass/records.py:130–144 — how the state is decided</figcaption>
+<pre><span class="k">def</span> <span class="f">_state_for</span>(text: str, key: str) -&gt; FieldState:
+    stripped = text.strip()
+    <span class="k">if</span> <span class="k">not</span> stripped:
+        <span class="k">return</span> <span class="s">"missing"</span>
+    lowered = stripped.lower()
+    <span class="k">if</span> any(m <span class="k">in</span> lowered <span class="k">for</span> m <span class="k">in</span> UNKNOWN_MARKERS) <span class="k">and</span> len(stripped) &lt; 60:
+        <span class="k">return</span> <span class="s">"missing"</span>          <span class="c"># "no idea", "tbd", "nicht bekannt"...</span>
+
+    spec = next((f <span class="k">for</span> f <span class="k">in</span> config.questionnaire()[<span class="s">"core_fields"</span>]
+                 <span class="k">if</span> f[<span class="s">"key"</span>] == key), <span class="k">None</span>)
+    minimum = (spec <span class="k">or</span> {}).get(<span class="s">"validation"</span>, {}).get(<span class="s">"min_words"</span>, 0)
+    <span class="k">if</span> minimum <span class="k">and</span> len(stripped.split()) &lt; minimum:
+        <span class="k">return</span> <span class="s">"unclear"</span>
+    <span class="k">return</span> <span class="s">"provided"</span></pre>
+  </figure>
+
+  <h3>The real stored record for RI-0001</h3>
+  <p>These are the eight rows from the <code>core_fields</code> table, exactly as
+  stored. Four provided, four missing — <b>4/8</b>, which is what the board shows.</p>
+  <div class="scroll"><table>
+    <tr><th style="width:150px">field_key</th><th style="width:92px">state</th>
+        <th>value</th><th style="width:190px">evidence</th></tr>
+    <tr><td><code>problem</code></td><td><span class="pill p-ok">provided</span></td>
+        <td>About 40% of our 1,250 tickets a month are repeat questions, and finding the
+            matching article takes two or three minutes each time.</td>
+        <td><code>RI-0001.md#Problem</code></td></tr>
+    <tr><td><code>intended_purpose</code></td><td><span class="pill p-ok">provided</span></td>
+        <td>Suggest the three most likely help centre articles for each incoming ticket,
+            so the specialist can pick one instead of searching.</td>
+        <td><code>RI-0001.md#Proposed improvement</code></td></tr>
+    <tr><td><code>users_affected</code></td><td><span class="pill p-ok">provided</span></td>
+        <td>The ten support specialists. Customers get a faster first reply.</td>
+        <td><code>RI-0001.md#Who is affected</code></td></tr>
+    <tr><td><code>deployment_context</code></td><td><span class="pill p-bad">missing</span></td>
+        <td style="color:var(--ink3)">— never asked</td><td>—</td></tr>
+    <tr><td><code>data</code></td><td><span class="pill p-bad">missing</span></td>
+        <td style="color:var(--ink3)">— never asked</td><td>—</td></tr>
+    <tr><td><code>expected_benefit</code></td><td><span class="pill p-ok">provided</span></td>
+        <td>Saves maybe two minutes on 500 tickets a month, so about 16 hours.</td>
+        <td><code>RI-0001.md#Expected benefit</code></td></tr>
+    <tr><td><code>effort</code></td><td><span class="pill p-bad">missing</span></td>
+        <td style="color:var(--ink3)">— never asked</td><td>—</td></tr>
+    <tr><td><code>human_oversight</code></td><td><span class="pill p-bad">missing</span></td>
+        <td style="color:var(--ink3)">— never asked</td><td>—</td></tr>
+  </table></div>
+
+  <p>Those four gaps become real work items, assigned to real people. Straight from the
+  <code>review_items</code> table:</p>
+  <table>
+    <tr><th style="width:90px">Severity</th><th>Reason</th><th style="width:170px">Field</th><th style="width:90px">Assigned</th></tr>
+    <tr><td><span class="pill p-warn">medium</span></td><td>missing_core_field</td><td><code>deployment_context</code></td><td>E17</td></tr>
+    <tr><td><span class="pill p-warn">medium</span></td><td>missing_core_field</td><td><code>data</code></td><td>E17</td></tr>
+    <tr><td><span class="pill p-warn">medium</span></td><td>missing_core_field</td><td><code>effort</code></td><td>E17</td></tr>
+    <tr><td><span class="pill p-warn">medium</span></td><td>missing_core_field</td><td><code>human_oversight</code></td><td>E17</td></tr>
+    <tr><td><span class="pill p-warn">medium</span></td><td>risk_review_required</td><td>—</td><td>E26</td></tr>
+    <tr><td><span class="pill p-mute">low</span></td><td>effort_estimated_by_agent</td><td>—</td><td>E26</td></tr>
+  </table>
+  <p>Luis (E17) sees exactly this on his “My ideas” tab, as the sentence
+  <i>“Waiting on you: deployment_context, data, effort, human_oversight”</i>.</p>
+</div></section>
+
+<!-- ===================================================== 5 -->
+<section id="s5"><div class="wrap">
+  <h2><span class="n">5</span>The five pipeline steps</h2>
+  <p class="lede">The order is not arbitrary. Step through it — every number and JSON
+  blob below is RI-0001's real stored assessment.</p>
+
+  <figure>
+    <figcaption>compass/agents/orchestrator.py:139–163 — the whole pipeline, abridged</figcaption>
+<pre>similarity_payload,  _ = similarity.assess(record, portfolio, conn)
+ai_fit_payload,      _ = ai_fit.assess(record, conn)
+risk_payload,        _ = risk.assess(record, conn,
+                            ai_fit_verdict=ai_fit_payload.get(<span class="s">"verdict"</span>))
+feasibility_payload, _ = feasibility.assess(record, conn)
+score_payload,       _ = score.assess(record, conn, feasibility_payload,
+                            config_name=active)
+<span class="c"># each one is saved as its own row, with the model that produced it</span>
+raise_review_items(conn, record, risk_payload, score_payload, feasibility_payload)
+allowed, gate_reason = risk.gate(risk_payload)
+status = <span class="s">"assessed"</span> <span class="k">if</span> allowed <span class="k">else</span> <span class="s">"in_review"</span></pre>
+  </figure>
+  <p><b>Why that order.</b> AI-fit runs before risk, because “this is not even an AI
+  system” changes the entire regulatory conversation. Feasibility runs before scoring,
+  because the RICE <i>Effort</i> number comes from the feasibility estimate instead of
+  being invented twice.</p>
+
+  <div class="steps" id="stepNav"></div>
+  <div class="stage" id="stage"></div>
+</div></section>
+
+<!-- ===================================================== 6 -->
+<section id="s6"><div class="wrap">
+  <h2><span class="n">6</span>The risk gate, and why it never sees the score</h2>
+  <p class="lede">This is the design claim the whole project rests on, so it is enforced
+  in code rather than promised in a document.</p>
+
+  <p>Look at the function signature. It takes <b>one argument</b>: the risk payload.
+  There is no parameter through which a business score could reach it.</p>
+  <figure>
+    <figcaption>compass/agents/risk.py:446–467</figcaption>
+<pre><span class="k">def</span> <span class="f">gate</span>(payload: dict) -&gt; tuple[bool, str]:
+    <span class="c">"""Whether the board may select this idea, and why not.
+
+    Called by the board before any decision is recorded. No business score is
+    an input here - that is the whole point.
+    """</span>
+    overall = payload.get(<span class="s">"overall"</span>, <span class="s">"insufficient_information"</span>)
+    <span class="k">if</span> overall == <span class="s">"prohibited"</span>:
+        citation = payload[<span class="s">"article_5"</span>].get(<span class="s">"citation"</span>, <span class="s">"Article 5"</span>)
+        <span class="k">return</span> <span class="k">False</span>, <span class="s">f"Blocked: prohibited practice under {citation}."</span>
+    <span class="k">if</span> overall <span class="k">in</span> (<span class="s">"high_risk"</span>, <span class="s">"high_risk_candidate"</span>):
+        who = <span class="s">", "</span>.join(payload.get(<span class="s">"human_review"</span>, {}).get(<span class="s">"who"</span>, [])) <span class="k">or</span> <span class="s">"E113"</span>
+        <span class="k">return</span> <span class="k">False</span>, (<span class="s">f"Blocked pending qualified review by {who}: ..."</span>)
+    <span class="k">if</span> overall == <span class="s">"insufficient_information"</span>:
+        <span class="k">return</span> <span class="k">False</span>, (<span class="s">"Blocked: screening incomplete because required "</span>
+                       <span class="s">"information is missing."</span>)
+    <span class="k">return</span> <span class="k">True</span>, <span class="s">""</span></pre>
+  </figure>
+
+  <p>And here is the only place a decision gets written. The gate is consulted first:</p>
+  <figure>
+    <figcaption>compass/views.py:573–578</figcaption>
+<pre>allowed, reason = risk_agent.gate(risk[<span class="s">"payload"</span>])
+<span class="k">if</span> decision == <span class="s">"selected"</span> <span class="k">and</span> <span class="k">not</span> allowed:
+    <span class="c"># The business score is not consulted. That is the point.</span>
+    <span class="k">return</span> (<span class="s">f"**Cannot select {use_case_id}.** {reason}\n\n"</span>
+            <span class="s">"The business score does not override this. Park or reject "</span>
+            <span class="s">"it, or have the named reviewer clear the gate first."</span>)</pre>
+  </figure>
+
+  <h3>What this does to our idea</h3>
+  <p>RI-0001 scores <b>8.0</b> and ranks <b>3rd of 43</b>. It is still blocked:</p>
+  <div class="card" style="border-left:3px solid var(--red)">
+    <p style="margin:0"><code>overall = "insufficient_information"</code> →
+    <b>“Blocked: screening incomplete because required information is missing.”</b></p>
+    <p style="margin:8px 0 0;color:var(--ink2)">Not because it is dangerous — because
+    <code>deployment_context</code>, <code>human_oversight</code> and <code>data</code>
+    were never collected, so the screening cannot honestly conclude “minimal risk”.
+    A high score cannot clear that. Only Luis answering the four questions can.</p>
+  </div>
+  <p>Three ideas in the portfolio are blocked for stronger reasons — one prohibited under
+  Article 5(1)(f), two potentially high-risk under Annex III point 4. Ten are blocked in
+  total.</p>
+</div></section>
+
+<!-- ===================================================== 7 -->
+<section id="s7"><div class="wrap">
+  <h2><span class="n">7</span>The board, and why no AI runs here</h2>
+  <p class="lede"><code>compass/app.py</code>, served at <b>/</b>. Pure read-and-filter over
+  rows the batch already wrote — which is exactly why it is fast and needs no key.</p>
+
+  <h3>Who sees what</h3>
+  <p>Three access roles, stored per employee in
+  <code>knowledge-base/people/capacity.csv</code>:</p>
+  <table>
+    <tr><th style="width:110px">Role</th><th style="width:60px">How many</th><th>Can see</th></tr>
+    <tr><td><code>admin</code></td><td>4</td><td>Ranked portfolio, scoring method, review queue, and <code>confidential</code> pages</td></tr>
+    <tr><td><code>reviewer</code></td><td>17</td><td>Review queue; <b>not</b> the ranked portfolio</td></tr>
+    <tr><td><code>employee</code></td><td>99</td><td>Knowledge chat, and own submissions <b>without scores</b></td></tr>
+  </table>
+
+  <div class="note"><b>Authorization is server-side, not UI-side.</b> Hiding a tab is
+  tidiness. Every handler re-checks the role through <code>compass/views.py</code>, so
+  an employee who calls the admin endpoint directly gets an error, not data. This was
+  tested against the running server: an employee hitting the portfolio endpoint gets
+  <code>401</code> / access-denied, not a table.</div>
+
+  <figure>
+    <figcaption>compass/views.py:84–90 — the check every admin handler calls</figcaption>
+<pre><span class="k">def</span> <span class="f">require_admin</span>(viewer: Viewer) -&gt; <span class="k">None</span>:
+    <span class="k">if</span> <span class="k">not</span> viewer.is_admin:
+        <span class="k">raise</span> AccessDenied(
+            <span class="s">f"{viewer.name} ({viewer.employee_id}) has access role "</span>
+            <span class="s">f"'{viewer.role}'. The assessed portfolio is restricted to the "</span>
+            <span class="s">f"decision board. Ask Ottilie Janssens (E26)."</span>)</pre>
+  </figure>
+
+  <h3>The filters, and why they are the point</h3>
+  <p>The board filters on numbers the pipeline produced: cost in euros, people required,
+  person-days, department, feasibility verdict, AI-fit verdict, “risk-clear only”, and
+  “has open review items”. Those exist because the company's real constraints are
+  <b>€250,000</b> of tooling budget and about <b>60 engineering person-days a month</b>,
+  with <b>1,058 person-days</b> already committed to 14 live projects.</p>
+  <p>Filtering is a plain list comprehension over rows already in memory
+  (<code>views.filter_portfolio</code>). No model, no query to the graph, no network.</p>
+
+  <div class="warn"><b>Normal-web-app comparison.</b> This section <i>is</i> a normal web
+  app: Gradio is the frontend, <code>views.py</code> is the controller, <code>db.py</code>
+  is the data layer, <code>compass.db</code> is the database. The only unusual thing is
+  that the expensive work happened earlier, in the batch.</div>
+</div></section>
+
+<!-- ===================================================== 8 -->
+<section id="s8"><div class="wrap">
+  <h2><span class="n">8</span>Re-weighting: changing the criteria</h2>
+  <p class="lede">The scoring method is a YAML file, not code. Switching it re-scores all
+  43 ideas and shows what moved and why. Both numbers below are real.</p>
+
+  <h3>What actually differs between the two configs</h3>
+  <table>
+    <tr><th style="width:190px">&nbsp;</th><th>rice-v1</th><th>rice-v2-cost-weighted</th></tr>
+    <tr><td>Formula</td>
+        <td><code>(reach × impact × confidence) / effort</code></td>
+        <td><code>(reach × impact × confidence) / (effort × cost_multiplier)</code></td></tr>
+    <tr><td><code>cost_multiplier</code></td><td>—</td>
+        <td>0.8 under €5k · 1.0 to €20k · 1.4 to €50k · 2.0 above</td></tr>
+    <tr><td><code>scarcity_penalty</code></td><td>—</td>
+        <td>×1.5 if a required skill is held by ≤1 person; ×1.2 if ≤3</td></tr>
+    <tr><td>Reach / Impact / Confidence</td><td colspan="2" style="color:var(--ink2)">identical — inherited unchanged</td></tr>
+  </table>
+  <p>The idea behind v2: when money and scarce people are the binding constraint, effort
+  should be <b>priced</b>, not just counted. A month of a lone specialist and a month of
+  someone replaceable are the same person-days but not the same decision.</p>
+
+  <h3>Real before and after, top 8 of 43</h3>
+  <div class="scroll"><table>
+    <tr><th style="width:44px">v1</th><th>Idea</th><th style="width:54px">Score</th>
+        <th style="width:44px">v2</th><th>Idea</th><th style="width:54px">Score</th></tr>
+    <tr><td>1</td><td>UC-002 Answer repeat support tickets</td><td>16.0</td>
+        <td>1</td><td>UC-002 Answer repeat support tickets</td><td>10.7</td></tr>
+    <tr><td>2</td><td>UC-011 Extract calibration results</td><td>16.0</td>
+        <td>2</td><td>UC-011 Extract calibration results</td><td>10.7</td></tr>
+    <tr style="background:var(--accent-soft)"><td>3</td><td><b>RI-0001 Find the right help centre article</b></td><td><b>8.0</b></td>
+        <td>3</td><td><b>RI-0001 Find the right help centre article</b></td><td><b>5.3</b></td></tr>
+    <tr><td>4</td><td>UC-004 Categorise and route tickets</td><td>8.0</td>
+        <td>4</td><td>UC-003 Stop retyping HubSpot orders</td><td>5.3</td></tr>
+    <tr><td>5</td><td>UC-003 Stop retyping HubSpot orders</td><td>6.4</td>
+        <td>5</td><td>UC-004 Categorise and route tickets</td><td>5.3</td></tr>
+    <tr><td>6</td><td>UC-018 Predict reorder dates</td><td>6.4</td>
+        <td>6</td><td>UC-018 Predict reorder dates</td><td>4.3</td></tr>
+    <tr><td>7</td><td>UC-030 Score sales leads</td><td>5.6</td>
+        <td>7</td><td>UC-030 Score sales leads</td><td>3.7</td></tr>
+    <tr><td>8</td><td>UC-022 Automate supplier invoice entry</td><td>4.0</td>
+        <td>8</td><td>UC-022 Automate supplier invoice entry</td><td>2.7</td></tr>
+  </table></div>
+  <p><b>20 of 43 ideas changed position or score; 23 were unchanged.</b> Every move gets
+  an explanation generated from the factor diff. Real examples:</p>
+  <figure>
+    <figcaption>produced by compass/agents/orchestrator.py diff(), shown in the Scoring tab</figcaption>
+<pre class="lite">UC-027 moved up 4 places: cost_multiplier 0.8 (new in this config). Score 1.6 -> 2.0.
+UC-041 moved up 4 places: cost_multiplier 0.8 (new in this config);
+       scarcity_penalty 1.5 (new in this config). Score 1.6 -> 1.3.
+UC-001 moved down 2 places: cost_multiplier 1.0 (new in this config);
+       scarcity_penalty 1.5 (new in this config). Score 1.6 -> 1.1.</pre>
+  </figure>
+  <p>RI-0001's own factors show why it fell from 8.0 to 5.3 without changing rank:
+  <code>cost_multiplier 1.0</code> (it costs €9,540, in the €5k–20k band) and
+  <code>scarcity_penalty 1.5</code> (a skill it needs is held by very few people).</p>
+  <div class="note"><b>Risk and feasibility are not recomputed.</b> They are properties
+  of the idea, not of how the board weights value. Only the business score changes —
+  which is the same separation as section 6.</div>
+</div></section>
+
+<!-- ===================================================== 9 -->
+<section id="s9"><div class="wrap">
+  <h2><span class="n">9</span>The knowledge chat (this part is ordinary RAG)</h2>
+  <p class="lede">The “Ask the company” tab. Retrieve relevant passages, hand them to a
+  model, cite the source. The twist is that retrieval is <b>permission-aware</b>.</p>
+
+  <h3>How retrieval works</h3>
+  <ol>
+    <li>The question is split into content words (stopwords and bare numbers dropped).</li>
+    <li>Every allowed chunk is scored with <b>TF-IDF</b> — a 1970s word-counting measure
+        of “how distinctive are the shared words”.</li>
+    <li>Two boosts: ×1.5 if a query word is in the section <b>heading</b>, and
+        ×(1 + 0.6 per word) if it is in the <b>filename</b>. The filename boost exists
+        because <code>ai-usage.md</code> answers “what does the AI usage policy forbid?”
+        even though the word “forbid” never appears in the text.</li>
+    <li>The top 5 chunks are pasted into the prompt with their paths, and the model is
+        told to cite them and never guess a number.</li>
+  </ol>
+  <div class="gap"><b>No embeddings anywhere.</b> Verified: the <code>kb_chunk</code>
+  table has columns <code>id, source_path, heading, text, classification</code> and no
+  embedding column. There is no vector database and no embedding model call in the
+  codebase. The <code>_vector()</code> function in <code>similarity.py</code> is a
+  <code>collections.Counter</code> of word counts, not a neural embedding. If someone
+  asks “what embedding model do you use?”, the honest answer is “none yet — that is the
+  obvious next improvement”.</div>
+
+  <h3>How confidential pages stay hidden</h3>
+  <p>Every knowledge-base page declares a <code>classification</code> in its front
+  matter, which is carried onto each chunk. A role maps to a ceiling, and the SQL only
+  ever selects at or below it:</p>
+  <figure>
+    <figcaption>compass/config.py:28–33 and compass/kg/retrieve.py:53–56</figcaption>
+<pre>CLASSIFICATION_ORDER = [<span class="s">"public"</span>, <span class="s">"internal"</span>, <span class="s">"confidential"</span>]
+ROLE_MAX_CLASSIFICATION = {
+    <span class="s">"employee"</span>: <span class="s">"internal"</span>,
+    <span class="s">"reviewer"</span>: <span class="s">"internal"</span>,
+    <span class="s">"admin"</span>:    <span class="s">"confidential"</span>,
+}
+
+<span class="k">def</span> <span class="f">_allowed_classifications</span>(role: str) -&gt; list[str]:
+    limit = config.CLASSIFICATION_ORDER.index(config.max_classification_for(role))
+    <span class="k">return</span> config.CLASSIFICATION_ORDER[: limit + 1]</pre>
+  </figure>
+  <p>Tested live against the running app — same question, two logins:</p>
+  <div class="cols">
+    <div class="card" style="border-left:3px solid var(--ink3)">
+      <h4 style="margin-top:0">E17 · employee</h4>
+      <p style="font-size:13.5px;margin:0">Gets only the README index page. The
+      confidential strategy page is filtered out before scoring, and the answer notes
+      how many sections are hidden and who to ask.</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--green)">
+      <h4 style="margin-top:0">E26 · admin</h4>
+      <p style="font-size:13.5px;margin:0">Gets <code>company/strategy-2027.md</code>
+      and the real figure: <i>“ARR from EUR 4.20 million to EUR 6.00 million”</i>.</p>
+    </div>
+  </div>
+  <p>With no API key the chat still answers — it quotes the top three matching sections
+  verbatim with their paths instead of composing prose. Retrieval never needed a model;
+  only the writing did.</p>
+</div></section>
+
+<!-- ===================================================== 10 -->
+<section id="s10"><div class="wrap">
+  <h2><span class="n">10</span>Concepts: what we really use, and what we don't</h2>
+  <p class="lede">Answer these exactly as written. Two of them are “no”, and claiming
+  otherwise is the fastest way to lose an audience.</p>
+
+  <table>
+    <tr><th style="width:130px">Concept</th><th style="width:88px">Used?</th><th>Where, precisely</th></tr>
+    <tr><td><b>RAG</b><br><span style="font-size:12px;color:var(--ink3)">retrieval-augmented generation: fetch text, put it in the prompt</span></td>
+        <td><span class="pill p-ok">yes</span></td>
+        <td>Two places. (1) The knowledge chat — <code>kg/retrieve.py</code> fetches
+            chunks, <code>views.ask_knowledge_base</code> puts them in the prompt.
+            (2) Each pipeline step gets graph facts pasted into its prompt as
+            “the only external facts you may use”.</td></tr>
+    <tr><td><b>Knowledge graph</b></td>
+        <td><span class="pill p-ok">yes</span></td>
+        <td>465 nodes and 769 edges in <code>kg_node</code> / <code>kg_edge</code>,
+            built deterministically by <code>kg/ingest.py</code>. Queried through 15
+            public functions in <code>kg/query.py</code>. Used for feasibility —
+            skills, systems, data quality, capacity, budget.</td></tr>
+    <tr><td><b>Embeddings</b><br><span style="font-size:12px;color:var(--ink3)">text turned into vectors by a model</span></td>
+        <td><span class="pill p-bad">no</span></td>
+        <td>None. No embedding column, no vector store, no embedding API call.
+            Similarity uses TF-IDF word counts plus hand-written capability keyword
+            sets. This is the clearest known weakness — see the note below.</td></tr>
+    <tr><td><b>MCP</b><br><span style="font-size:12px;color:var(--ink3)">Model Context Protocol: a standard way to expose tools to a model</span></td>
+        <td><span class="pill p-bad">no</span></td>
+        <td>Zero matches for “mcp” across <code>compass/</code>,
+            <code>employee_interface/</code>, <code>config/</code> and
+            <code>seed/</code>. Not used anywhere in the app.</td></tr>
+    <tr><td><b>Fine-tuning / training</b></td>
+        <td><span class="pill p-bad">no</span></td>
+        <td>Nothing is trained. Reliability comes from worked examples inside the
+            prompts plus 14 labelled checks in <code>evals/run_evals.py</code>.</td></tr>
+    <tr><td><b>Vector / semantic search</b></td>
+        <td><span class="pill p-warn">partly</span></td>
+        <td>“Semantic” only loosely. It is lexical (TF-IDF cosine) plus a
+            capability-signature overlap. Honest phrasing: <i>“lexical similarity plus
+            capability matching; embeddings are the next step.”</i></td></tr>
+  </table>
+
+  <div class="gap"><b>Why no embeddings is a real limitation, with a real number.</b>
+  The headline demo is that Sales' “answer tender questions” and Support's “answer
+  repeat tickets” are the same underlying system. Pure TF-IDF scores that pair at
+  <b>0.149</b> — far too low to link — because “tenders” and “tickets” share no words.
+  It is only caught because a hand-written capability-tag overlap was added on top.
+  Embeddings would catch it properly, and that is the honest “next step”.</div>
+
+  <h3>The word “agent” means two different things in this repo</h3>
+  <div class="cols">
+    <div class="card">
+      <h4 style="margin-top:0">A real agent — the intake chat</h4>
+      <p style="font-size:14px"><code>employee_interface/app.py</code> uses the OpenAI
+      Agents SDK. The model holds a conversation, decides <b>on its own</b> when to call
+      the <code>propose_idea</code> tool, reads the tool's refusal, and tries again. That
+      is a loop the model drives — an agent as the industry means it.</p>
+    </div>
+    <div class="card">
+      <h4 style="margin-top:0">“Agents” in <code>compass/agents/</code></h4>
+      <p style="font-size:14px">These are <b>not</b> loops. Each is a Python function
+      that builds one prompt, makes <b>one</b> call, validates the JSON, and returns.
+      <code>compass/</code> does not import the Agents SDK at all. Think of them as
+      five specialist assessors, each asked exactly one question once.</p>
+    </div>
+  </div>
+  <div class="note"><b>How to say it out loud:</b> “The intake chat is a tool-using
+  agent. The evaluation pipeline is five single-shot specialists orchestrated by plain
+  Python, each grounded in graph facts and each with a deterministic fallback.” That is
+  accurate, and it is a better story than pretending everything is autonomous.</div>
+</div></section>
+
+<!-- ===================================================== 11 -->
+<section id="s11"><div class="wrap">
+  <h2><span class="n">11</span>Every place the LLM is called</h2>
+  <p class="lede">Six call sites in the whole codebase. Found by grepping for
+  <code>llm.generate_json</code> and <code>llm.generate_text</code>, plus the Agents SDK
+  runner in the intake app.</p>
+
+  <div class="scroll"><table>
+    <tr><th>Call site</th><th style="width:150px">When</th><th style="width:130px">Calls per idea</th>
+        <th>Works with no key?</th></tr>
+    <tr><td><code>agents/similarity.py:231</code><br><span style="font-size:12px;color:var(--ink3)">judge one shortlisted pair</span></td>
+        <td>in <code>seed.load</code></td><td>0–4 (one per shortlisted pair)</td>
+        <td><span class="pill p-ok">yes</span> TF-IDF + capability tags</td></tr>
+    <tr><td><code>agents/ai_fit.py:256</code></td><td>in <code>seed.load</code></td><td>1</td>
+        <td><span class="pill p-ok">yes</span> keyword sets</td></tr>
+    <tr><td><code>agents/risk.py:479</code></td><td>in <code>seed.load</code></td><td>1</td>
+        <td><span class="pill p-ok">yes</span> keyword decision tree</td></tr>
+    <tr><td><code>agents/feasibility.py:385</code><br><span style="font-size:12px;color:var(--ink3)">extract required skills/systems/data only</span></td>
+        <td>in <code>seed.load</code></td><td>1</td>
+        <td><span class="pill p-ok">yes</span> keyword hints + regex</td></tr>
+    <tr><td><code>agents/score.py:203</code><br><span style="font-size:12px;color:var(--ink3)">extract reach, judge impact tier</span></td>
+        <td>in <code>seed.load</code>, and again on a re-weight</td><td>1</td>
+        <td><span class="pill p-ok">yes</span> regex + keyword tiers</td></tr>
+    <tr><td><code>views.py:550</code><br><span style="font-size:12px;color:var(--ink3)">knowledge chat answer</span></td>
+        <td><b>live</b>, per question</td><td>1 per question</td>
+        <td><span class="pill p-ok">yes</span> quotes the chunks instead</td></tr>
+    <tr style="background:var(--amber-soft)"><td><code>employee_interface/app.py:89</code><br><span style="font-size:12px;color:var(--ink3)">Runner.run_streamed — the agent loop</span></td>
+        <td><b>live</b>, per chat message</td><td>1+ per message, model decides</td>
+        <td><span class="pill p-bad">NO</span> hard requirement</td></tr>
+  </table></div>
+
+  <p><b>Totals.</b> 5–8 calls per idea → roughly 300 for the whole 43-idea portfolio,
+  all inside the batch run. The board itself makes <b>zero</b> calls. Only the knowledge
+  chat and the intake chat call anything live.</p>
+
+  <figure>
+    <figcaption>compass/llm.py:116–140 — the fallback that makes five of the six optional</figcaption>
+<pre><span class="k">def</span> <span class="f">generate_json</span>(system, user, offline, required_keys=()):
+    name = config.provider()
+    <span class="k">if</span> name == <span class="s">"offline"</span> <span class="k">or</span> name <span class="k">not</span> <span class="k">in</span> PROVIDERS:
+        <span class="k">return</span> offline(), OFFLINE_MODEL          <span class="c"># no key at all</span>
+    <span class="k">try</span>:
+        raw = PROVIDERS[name](system, user, <span class="k">True</span>)
+        payload = json.loads(_strip_json(raw))
+        missing = [k <span class="k">for</span> k <span class="k">in</span> required_keys <span class="k">if</span> k <span class="k">not</span> <span class="k">in</span> payload]
+        <span class="k">if</span> missing:
+            <span class="k">raise</span> ValueError(<span class="s">f"missing keys in model output: {missing}"</span>)
+        <span class="k">return</span> payload, config.model_name()
+    <span class="k">except</span> Exception <span class="k">as</span> error:        <span class="c"># provider, network, or bad JSON</span>
+        last_degradation = <span class="s">f"{name}: {type(error).__name__}: {error}"</span>
+        fallback = offline()
+        fallback.setdefault(<span class="s">"_degraded"</span>, last_degradation)
+        <span class="k">return</span> fallback, <span class="s">f"{OFFLINE_MODEL} (fallback from {name})"</span></pre>
+  </figure>
+  <p>Three situations route to the offline rules: no key configured, the provider errors
+  or rate-limits, and the model returns something that is not valid JSON. Every
+  assessment row stores <b>which engine produced it</b>, and the board displays that —
+  so a rule-based verdict and a model verdict never look identical to a decision maker.</p>
+  <div class="warn"><b>Right now every stored assessment says
+  <code>offline-rules-v1</code>.</b> No key has been configured, so everything you see
+  on the board was produced by rules, not by a model. That is worth knowing before you
+  describe it as AI output.</div>
+</div></section>
+
+<!-- ===================================================== 12 -->
+<section id="s12"><div class="wrap">
+  <h2><span class="n">12</span>Cheat sheet</h2>
+  <p class="lede">One screen. Enough to explain the project to a teammate or answer
+  questions after the pitch.</p>
+
+  <div class="cheat">
+    <p class="big">Employees submit ideas in a chat. A five-step pipeline turns each one
+    into the same eight fields, checks whether AI is even the right tool, screens it
+    against the EU AI Act, checks whether <i>this</i> company can actually build it, and
+    scores it. Four admins see a ranked board. The agent recommends; people decide.</p>
+
+    <h3>The shape</h3>
+    <ol>
+      <li><b>Two apps, one port.</b> <code>python -m compass.serve</code> → board at
+          <code>/</code>, intake chat at <code>/intake/</code>, one login for both.
+          The intake chat needs an OpenAI key; the board needs nothing.</li>
+      <li><b>Ideas are files.</b> <code>knowledge-base/ideas/raw/RI-NNNN.md</code> —
+          the employee's own words, never edited by an agent.</li>
+      <li><b>Everything else is derived</b> into <code>compass.db</code> by
+          <code>python -m seed.load</code>. Delete the database and rebuild; nothing
+          human is lost.</li>
+      <li><b>The rules are config, not code.</b> The 8 questions, the two scoring
+          methods and the EU AI Act decision tree are YAML in <code>config/</code>.</li>
+    </ol>
+
+    <h3>The five steps, in order and why</h3>
+    <ol>
+      <li><b>Similarity</b> — does another team already want this? Catches duplicates
+          across departments.</li>
+      <li><b>AI fit</b> — is AI even needed, or would a script do? 2 of 43 ideas turned
+          out to be plain integration work.</li>
+      <li><b>EU AI Act</b> — Article 5 prohibited / Article 6 + Annex III high-risk /
+          Article 50 transparency as a <i>separate</i> flag. Every verdict cites an
+          article.</li>
+      <li><b>Feasibility</b> — graph queries: who holds the skill, does the system have
+          an API, is the data good enough, cost vs. €142k unspent, effort vs. a
+          1,058-day backlog.</li>
+      <li><b>Score</b> — configurable RICE. Business value only.</li>
+    </ol>
+    <p style="margin:6px 0 0"><i>Order matters: “not an AI system” changes the risk
+    conversation, and RICE Effort comes from feasibility rather than being guessed
+    twice.</i></p>
+
+    <h3>The two claims enforced in code</h3>
+    <ul>
+      <li><b>Risk never loses to score.</b> <code>risk.gate()</code> takes one argument
+          and the score is not it. RI-0001 ranks 3rd and is still blocked.</li>
+      <li><b>Nothing is invented.</b> A field nobody answered is <code>missing</code>,
+          not inferred. The screening cannot return “minimal risk” while a field it needs
+          is absent — it returns “cannot tell yet” and assigns the question to a named
+          person.</li>
+    </ul>
+
+    <h3>Say these exactly</h3>
+    <table style="margin-top:8px">
+      <tr><th style="width:150px">If asked…</th><th>Say</th></tr>
+      <tr><td>“Do you use embeddings?”</td><td><b>No.</b> TF-IDF plus capability keyword
+          matching. Embeddings are the clearest next improvement — pure TF-IDF scored our
+          headline duplicate pair at 0.149.</td></tr>
+      <tr><td>“Do you use MCP?”</td><td><b>No.</b> Not in the app at all.</td></tr>
+      <tr><td>“Did you train a model?”</td><td><b>No.</b> Worked examples in the prompts
+          plus 14 labelled checks in <code>evals/</code>.</td></tr>
+      <tr><td>“Is it agentic?”</td><td>The intake chat is a genuine tool-using agent. The
+          evaluation pipeline is five single-shot specialists orchestrated by plain
+          Python.</td></tr>
+      <tr><td>“Does it work without an API key?”</td><td>The board and the evaluation
+          pipeline do, on deterministic rules — that is the demo's safety net, not a
+          feature. The intake chat does not.</td></tr>
+      <tr><td>“Is the AI Act screening legal advice?”</td><td><b>No.</b> Preliminary
+          triage that cites articles and routes every non-minimal verdict to the Data
+          Protection Officer (E113) and Head of Quality (E110).</td></tr>
+    </table>
+
+    <h3>Numbers worth memorising</h3>
+    <p style="margin:6px 0 0">43 ideas assessed · 10 blocked by a risk gate (1
+    prohibited, 2 high-risk, 7 incomplete) · 2 reclassified as conventional automation ·
+    53 overlap links, 38 of them cross-department · 465 graph nodes, 769 edges, 163 text
+    chunks · 120 employees, 4 admins · €250k tooling budget, €142k unspent · 60
+    engineering person-days a month against 1,058 committed.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">
+  <p>Generated from the repository at <code>/Users/vasu/Documents/Github/agent-innovation</code>
+  on branch <code>feat/ai-compass</code>. Every figure was read from the code or from
+  <code>compass.db</code>; red boxes mark the places the code does not answer the
+  question.</p>
+  <p>To refresh the data this page describes:
+  <code>python -m seed.load</code> then <code>python -m evals.run_evals</code>.</p>
+</div></footer>
+
+<script>
+/* ============================ nav highlighting ============================ */
+const secs = [...document.querySelectorAll('section')];
+const links = [...document.querySelectorAll('nav a')];
+const spy = new IntersectionObserver(es => {
+  es.forEach(e => {
+    if (!e.isIntersecting) return;
+    links.forEach(l => l.classList.toggle('on', l.hash === '#' + e.target.id));
+  });
+}, {rootMargin: '-60px 0px -70% 0px'});
+secs.forEach(s => spy.observe(s));
+
+/* ============================ 1. architecture ============================ */
+const ARCH = {
+  emp:{t:'An employee', w:'knowledge-base/people/employees.csv · capacity.csv',
+    d:'One of 120 fictional staff. Our example is E17, Luis Ortega, a Support Specialist in Aachen. His access role is <code>employee</code>, so he can submit ideas and ask the knowledge chat, but cannot see the ranked board.',
+    like:'Like a user row in your users table — except it also carries a skills list and a day rate, which the feasibility step does arithmetic on.'},
+  intake:{t:'Intake chat app · /intake/ (or :7860 alone)', w:'employee_interface/app.py · auth.py · idea_store.py',
+    d:'A Gradio chat. Uses the OpenAI Agents SDK: the model is given one tool (<code>propose_idea</code>) and loops until it thinks the idea is complete. The human then presses Submit, which is the only thing that writes a file. <b>Requires OPENAI_API_KEY — it has no offline fallback.</b>',
+    like:'Frontend and backend in one process. Gradio serves the UI and routes events straight to Python functions, so there is no separate REST layer.'},
+  raw:{t:'RI-0001.md — the raw idea', w:'knowledge-base/ideas/raw/RI-0001.md',
+    d:'A markdown file with YAML front matter (id, author, timestamp) and six <code>##</code> sections. This is the employee\'s own words and is never edited by an agent. IDs are allocated with <code>open(..., "x")</code> so a file is never overwritten.',
+    like:'Instead of an INSERT into an ideas table, it is a file in git. Deliberate: it stays greppable, diff-able and reviewable.'},
+  openai:{t:'The LLM provider', w:'compass/llm.py · .env',
+    d:'Chosen by <code>LLM_PROVIDER</code>: <code>openai</code>, <code>anthropic</code>, or <code>offline</code>. Offline is a deterministic rule engine, used when there is no key, when the provider errors, or when the model returns invalid JSON. <b>Every assessment currently in the database says <code>offline-rules-v1</code>.</b>',
+    like:'A third-party API client with a circuit breaker — except the fallback produces a real answer instead of an error page.'},
+  kb:{t:'knowledge-base/ — the company, written down', w:'46 .md and .csv files, plus the ideas/ folder',
+    d:'Departments, policies, processes, the IT system list, the data inventory, the employee roster, strategy and the project list. Every page has front matter with an owner and a <code>classification</code> of public / internal / confidential.',
+    like:'Seed content, like a CMS export. It is an input, not something the app writes to.'},
+  cfg:{t:'config/*.yaml — the rules', w:'intake-questionnaire.yaml · scoring/rice-v1.yaml · scoring/rice-v2-cost-weighted.yaml · risk/eu-ai-act.yaml',
+    d:'The 8 core questions and which agent consumes each one; two RICE scoring methods; the EU AI Act decision tree with a citation on every branch. Changing the scoring YAML re-ranks the portfolio without touching code.',
+    like:'Ordinary config files — except these hold business and legal logic, not connection strings.'},
+  load:{t:'seed/load.py — the batch job', w:'seed/load.py · run with python -m seed.load',
+    d:'Rebuilds the graph, loads the 42 seeded ideas plus anything in <code>ideas/raw/</code>, runs the 5-step pipeline over all of them, and snapshots the ranking. <b>You run this by hand.</b> Nothing re-assesses automatically.',
+    like:'A migration or nightly cron job — but here it is the only thing that produces results, and nobody has scheduled it yet.'},
+  ingest:{t:'kg/ingest.py — files into a graph', w:'compass/kg/ingest.py',
+    d:'Plain Python parsing: reads markdown tables and bullet lists and CSV rows, writes 465 nodes, 769 edges and 163 text chunks. No model involved. Every node records the file it came from, which is what makes later citations possible.',
+    like:'An ETL job. Source files in, two normalised tables out.'},
+  pipe:{t:'The 5 pipeline steps', w:'compass/agents/{similarity,ai_fit,risk,feasibility,score}.py · orchestrator.py',
+    d:'Run in a fixed order for each idea: similarity → AI fit → EU AI Act → feasibility → score. Each builds a prompt, makes at most one model call, validates the JSON, and saves its own row. Each also ships deterministic rules used when there is no key.',
+    like:'A service layer of five pure functions — except each one can optionally ask a language model, and each has a non-AI fallback.'},
+  db:{t:'compass.db — everything derived', w:'compass/db.py · SQLite, 19 tables',
+    d:'Key tables: <code>use_cases</code>, <code>core_fields</code> (the 8 fields and their states), <code>assessments</code> (one row per step, with the model that produced it), <code>overlaps</code>, <code>review_items</code>, <code>decisions</code>, <code>kg_node</code>, <code>kg_edge</code>, <code>kb_chunk</code>.',
+    like:'Your application database. The unusual part: it is entirely regenerable — delete it, run the batch, and you are back.'},
+  board:{t:'Board app · / (or :7861 alone)', w:'compass/app.py · served by compass/serve.py',
+    d:'Gradio again. Tabs: Ask the company, My ideas, Portfolio, Scoring method, Review queue. The last three are hidden for non-admins. <b>No model is called on this port</b> except in the knowledge chat.',
+    like:'A normal admin dashboard reading rows and filtering them in memory.'},
+  views:{t:'views.py — the access rules', w:'compass/views.py',
+    d:'Assembles the portfolio table and detail pages, and enforces authorization. <code>require_admin()</code> and <code>require_reviewer()</code> raise on every call — hiding a tab is only tidiness. This is also where a Select decision consults the risk gate.',
+    like:'Your controller plus your authorization middleware, in one module.'},
+  people:{t:'The people who decide', w:'knowledge-base/people/capacity.csv (access_role column)',
+    d:'4 admins (CEO, CTO, Finance lead, Head of Strategy &amp; AI Portfolio), 17 reviewers, 99 employees. Admins select, park or reject; the pipeline only recommends.',
+    like:'Role-based access control — with the roles stored in a CSV rather than a permissions table.'}
+};
+const archPanel = document.getElementById('archPanel');
+document.querySelectorAll('#arch .hit').forEach(g => {
+  g.addEventListener('click', () => {
+    document.querySelectorAll('#arch .hit').forEach(x => x.classList.remove('sel'));
+    g.classList.add('sel');
+    const a = ARCH[g.dataset.k];
+    archPanel.innerHTML = `<h5>${a.t}</h5><div class="where">${a.w}</div>
+      <div>${a.d}</div><div class="like"><b>In normal web-app terms:</b> ${a.like}</div>`;
+  });
+});
+
+/* ============================ 2. knowledge graph ============================ */
+const COLORS = {Employee:'#1f6feb', Department:'#1a7f4b', Site:'#1a7f4b',
+  System:'#8a5a00', Dataset:'#8a5a00', Skill:'#7c4dff',
+  PainPoint:'#b3261e', StrategyPriority:'#b3261e', Project:'#b3261e'};
+
+/* all 12 nodes and 14 edges below are copied verbatim out of compass.db */
+const NODES = [
+  {id:'employee:E17', t:'Employee', n:'Luis Ortega', x:300, y:215, r:30,
+   a:{employee_id:'E17', role:'Support Specialist', department:'support', work_mode:'office', start_date:'2022-01-10'},
+   src:'knowledge-base/people/employees.csv'},
+  {id:'employee:E16', t:'Employee', n:'Hannah Fischer', x:470, y:120, r:26,
+   a:{employee_id:'E16', role:'Head of Customer Success', department:'support', work_mode:'hybrid', start_date:'2020-08-01'},
+   src:'knowledge-base/people/employees.csv'},
+  {id:'department:support', t:'Department', n:'Customer Success & Support', x:300, y:355, r:28,
+   a:{key:'support', owner:'E16', tools:'Zendesk, HubSpot, Canopy admin view, Slack'},
+   src:'knowledge-base/departments/support.md'},
+  {id:'site:aachen', t:'Site', n:'Aachen', x:130, y:120, r:22, a:{},
+   src:'(built from capacity.csv)'},
+  {id:'skill:troubleshooting', t:'Skill', n:'Troubleshooting', x:120, y:265, r:22, a:{},
+   src:'(split from the skills column of employees.csv)'},
+  {id:'skill:knowledge-articles', t:'Skill', n:'knowledge articles', x:140, y:345, r:22, a:{},
+   src:'(split from the skills column of employees.csv)'},
+  {id:'system:zendesk', t:'System', n:'Zendesk', x:650, y:150, r:26,
+   a:{purpose:'Support tickets and help centre', owner_id:'E16', personal_data:'yes', api_or_automation:'yes', in_data_warehouse:'yes'},
+   src:'knowledge-base/it/systems.csv'},
+  {id:'dataset:support-tickets', t:'Dataset', n:'Support tickets', x:845, y:95, r:26,
+   a:{system:'Zendesk', owner_id:'E16', volume:'about 52,000 since 2022', quality:'medium', quality_note:'medium: categories inconsistent'},
+   src:'knowledge-base/it/data-inventory.csv'},
+  {id:'dataset:help-centre-articles', t:'Dataset', n:'Help centre articles', x:860, y:215, r:26,
+   a:{system:'Zendesk', owner_id:'E86', volume:'85 articles', quality:'low to medium', quality_note:'low to medium: about 30 outdated'},
+   src:'knowledge-base/it/data-inventory.csv'},
+  {id:'priority:2', t:'StrategyPriority', n:'Reduce support load', x:640, y:300, r:26,
+   a:{target:'Tickets per 1,000 installed sensors per month from 13 to 9', owner:'Hannah Fischer (E16)'},
+   src:'knowledge-base/company/strategy-2027.md'},
+  {id:'pain:support-01', t:'PainPoint', n:'40% of tickets are repeats', x:470, y:390, r:26,
+   a:{department:'support'},
+   src:'knowledge-base/departments/support.md'},
+  {id:'project:P02', t:'Project', n:'Help centre refresh', x:860, y:360, r:26,
+   a:{lead:'E86', status:'delayed', due:'2027-01-31', remaining_person_days:45, members:'E17, E18, E15'},
+   src:'knowledge-base/projects/active-projects.md'}
+];
+const EDGES = [
+  ['employee:E17','member_of','department:support'],
+  ['employee:E17','reports_to','employee:E16'],
+  ['employee:E17','located_at','site:aachen'],
+  ['employee:E17','has_skill','skill:troubleshooting'],
+  ['employee:E17','has_skill','skill:knowledge-articles'],
+  ['employee:E16','member_of','department:support'],
+  ['employee:E16','located_at','site:aachen'],
+  ['employee:E16','owns','department:support'],
+  ['employee:E16','owns','system:zendesk'],
+  ['employee:E16','owns','dataset:support-tickets'],
+  ['employee:E16','owns','priority:2'],
+  ['system:zendesk','stores_dataset','dataset:support-tickets'],
+  ['system:zendesk','stores_dataset','dataset:help-centre-articles'],
+  ['department:support','suffers','pain:support-01']
+];
+const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+const g = document.getElementById('kgraph');
+let svg = `<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5"
+  markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+  <path d="M0 0 L10 5 L0 10 z" fill="#aeb4bc"/></marker></defs>`;
+EDGES.forEach(([s, rel, d]) => {
+  const A = byId[s], B = byId[d];
+  const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy);
+  const x1 = A.x + dx / L * (A.r + 2), y1 = A.y + dy / L * (A.r + 2);
+  const x2 = B.x - dx / L * (B.r + 6), y2 = B.y - dy / L * (B.r + 6);
+  svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#aeb4bc"
+           stroke-width="1.4" marker-end="url(#ar2)"/>`;
+  svg += `<text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 4}" class="lbl"
+           text-anchor="middle">${rel}</text>`;
+});
+NODES.forEach(n => {
+  const c = COLORS[n.t] || '#6b7480';
+  const words = n.n.split(' ');
+  let lines = [n.n];
+  if (n.n.length > 15) {
+    const mid = Math.ceil(words.length / 2);
+    lines = [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+  }
+  const txt = lines.map((l, i) =>
+    `<tspan x="${n.x}" dy="${i === 0 ? (lines.length > 1 ? -2 : 3) : 11}">${l}</tspan>`).join('');
+  svg += `<g class="hit" data-id="${n.id}">
+    <circle cx="${n.x}" cy="${n.y}" r="${n.r}" fill="${c}22" stroke="${c}" stroke-width="1.8"/>
+    <text x="${n.x}" y="${n.y}" text-anchor="middle"
+          style="font:9.5px var(--sans);fill:#16191d">${txt}</text>
+    <text x="${n.x}" y="${n.y + n.r + 12}" text-anchor="middle" class="lbl">${n.t}</text>
+  </g>`;
+});
+g.innerHTML = svg;
+const kgPanel = document.getElementById('kgPanel');
+g.querySelectorAll('.hit').forEach(el => {
+  el.addEventListener('click', () => {
+    g.querySelectorAll('.hit').forEach(x => x.classList.remove('sel'));
+    el.classList.add('sel');
+    const n = byId[el.dataset.id];
+    const rows = Object.keys(n.a).length
+      ? Object.entries(n.a).map(([k, v]) =>
+          `<tr><td><code>${k}</code></td><td>${v}</td></tr>`).join('')
+      : `<tr><td colspan="2" style="color:var(--ink3)">no stored attributes —
+          this node exists only to be connected</td></tr>`;
+    const out = EDGES.filter(e => e[0] === n.id)
+      .map(e => `<code>${e[1]}</code> → ${byId[e[2]].n}`).join('<br>') || '—';
+    const inc = EDGES.filter(e => e[2] === n.id)
+      .map(e => `${byId[e[0]].n} → <code>${e[1]}</code>`).join('<br>') || '—';
+    kgPanel.innerHTML = `<h5>${n.n}</h5>
+      <div class="where">id <code>${n.id}</code> · type <code>${n.t}</code> ·
+        from <code>${n.src}</code></div>
+      <table style="margin:8px 0"><tr><th style="width:170px">attribute</th>
+        <th>value</th></tr>${rows}</table>
+      <div class="cols" style="gap:12px">
+        <div><h4 style="margin:4px 0">Edges out</h4><div style="font-size:13px">${out}</div></div>
+        <div><h4 style="margin:4px 0">Edges in</h4><div style="font-size:13px">${inc}</div></div>
+      </div>`;
+  });
+});
+
+/* ============================ 5. pipeline stepper ============================ */
+const STEPS = [
+  {
+    key:'similarity', name:'1 · Similarity',
+    q:'Does another team already want this?',
+    why:'Runs first so a duplicate is visible before anyone spends effort assessing it in isolation.',
+    facts:[['<code>related_projects(conn, text)</code>','matches the idea text against the 14 Project nodes — by word overlap, not by edges']],
+    prompt:`You judge whether two internal improvement ideas overlap.
+Return JSON only: {verdict, similarity_reason, shared_capability,
+                   recommendation, who_should_talk}
+
+- duplicate: same problem AND same solution. One piece of work serves both.
+- related:   different problems, same underlying capability.
+- distinct:  superficial word overlap only.
+
+Judge the underlying capability, not the vocabulary. Two ideas phrased very
+differently can be duplicates, and two using identical words can be distinct.`,
+    json:`{
+  "overlaps": [
+    { "other_id": "UC-041", "other_department": "support", "similarity": 0.384,
+      "verdict": "related",
+      "shared_capability": "document search, forecasting, text drafting" },
+    { "other_id": "UC-001", "other_department": "sales", "similarity": 0.337,
+      "verdict": "related",
+      "shared_capability": "document search, text drafting",
+      "similarity_reason": "Different problems, same underlying capability...
+        and the two sit in different departments (support and sales), so
+        neither team is likely to know about the other." },
+    { "other_id": "UC-025", "other_department": "sales", "similarity": 0.324, ... },
+    { "other_id": "UC-002", "other_department": "support", "similarity": 0.314, ... }
+  ],
+  "checked_against": 42,
+  "shortlisted": 4,
+  "active_project_overlap": [
+    { "id": "P02", "project": "Help centre refresh", "status": "delayed",
+      "due": "2027-01-31", "cite": "knowledge-base/projects/active-projects.md" }
+  ]
+}`,
+    offline:`Two measures, combined 60/40, no model needed:
+
+1. TF-IDF cosine over the two idea texts — plain word counting.
+2. Capability-tag overlap (Jaccard). Each idea is tagged from keyword sets:
+   document_search, text_drafting, classification, data_transfer, extraction,
+   forecasting, people_assessment, monitoring, reporting.
+
+   combined = 0.6 * cosine + 0.4 * jaccard      # similarity.py:179-183
+
+Link only if combined >= 0.28 AND the two share >= 2 capability tags.
+
+Why the capability tags exist: the headline duplicate pair in the demo scores
+only 0.149 on cosine alone, because "tenders" and "tickets" share no words.`,
+    real:'For RI-0001 this found 4 related ideas out of 42 checked — including UC-001 in <b>Sales</b>, a different department, because both need “document search + text drafting”. It also noticed project P02 is already running.'
+  },
+  {
+    key:'ai_fit', name:'2 · AI fit',
+    q:'Is AI even the right tool, or would a script do?',
+    why:'Runs before the risk screening, because “this is not an AI system at all” changes the entire regulatory question.',
+    facts:[['<code>system_integrability(conn, names)</code>','for each system named, is there an API at all?'],
+           ['<code>dataset_fitness(conn, topics)</code>','which datasets match, and how good are they?']],
+    prompt:`You decide whether a proposed internal use case genuinely needs AI.
+Return JSON only: {verdict, confidence, reasoning, why_not_simpler,
+                   simpler_alternative, signals, gaps}
+
+- conventional_automation: deterministic work. Moving data between two systems,
+  a field mapping, a scheduled report. If a developer could write the rules out
+  in full, it is not an AI problem.
+- ai: the input is unstructured and needs interpretation.
+- hybrid: mostly plumbing with exactly one judgement step. Say which.
+- more_research: the data does not exist or the purpose is too vague.
+
+Judge the task, not the submitter's enthusiasm. People often label integration
+work as AI. If a system has no API, saying so matters more than the verdict.`,
+    json:`{
+  "verdict": "ai",
+  "confidence": "high",
+  "reasoning": "The input is unstructured and has to be interpreted rather than
+                matched: article, articles, matching, questions, search.
+                Fixed rules would miss the variation.",
+  "why_not_simpler": "The same meaning arrives in many different wordings,
+                      which keyword rules do not cover.",
+  "signals": ["article", "articles", "matching", "questions", "search", "suggest"],
+  "gaps": []
+}`,
+    offline:`Three keyword sets, checked in a fixed order (ai_fit.py:121-230):
+
+  UNSTRUCTURED  ticket, email, article, question, classify, draft, search, ...
+  DETERMINISTIC retype, copy, sync, export, reconcile, mapping, spreadsheet, ...
+  JUDGEMENT     rank, predict, detect, recommend, triage, route, score, ...
+
+  if intended_purpose missing        -> more_research
+  if DETERMINISTIC and not UNSTRUCTURED -> conventional_automation
+  if weak data and nothing usable    -> more_research
+  if UNSTRUCTURED and DETERMINISTIC  -> hybrid
+  if UNSTRUCTURED or JUDGEMENT       -> ai
+
+RI-0001 hit six UNSTRUCTURED words and no DETERMINISTIC ones, so: "ai".`,
+    real:'Across the 43 ideas this verdict is <b>ai</b> for 18, <b>hybrid</b> for 15, <b>more_research</b> for 8 and <b>conventional_automation</b> for 2. Those last two are the finding clients least expect — they are integration work wearing an AI label.'
+  },
+  {
+    key:'risk', name:'3 · EU AI Act',
+    q:'Is this allowed, and under what obligations?',
+    why:'Gets the AI-fit verdict passed in, because conventional automation is not an AI system under Article 3(1) and the Act does not apply to it.',
+    facts:[['<code>policy_constraints(conn, text)</code>','company policy rules that match — these can block independently of the law']],
+    prompt:`You perform a preliminary EU AI Act (Regulation (EU) 2024/1689)
+screening. You are a triage step before qualified human review, never a
+substitute for it.
+
+Order of checks:
+1. Article 5 prohibited practices — absolutely, first. The most common trap for
+   an internal productivity idea is Art. 5(1)(f): inferring emotions of a person
+   in the workplace. The medical/safety exception is narrow.
+2. Article 6(1) + Annex I: safety component of a regulated product?
+3. Article 6(2) + Annex III. Point 4 = employment and worker management.
+4. Article 6(3) derogation — narrow procedural task, etc. NEVER applies if the
+   system profiles natural persons. If you apply it, name the condition.
+5. Article 50 transparency, as a SEPARATE flag that never cancels a risk level.
+
+If intended purpose, affected people or human oversight are missing you CANNOT
+conclude 'minimal'. Return 'insufficient_information' and list what is missing.`,
+    json:`{
+  "article_5":  { "verdict": "none", "matched_check": null, "citation": null },
+  "high_risk":  { "verdict": "insufficient_information", "route": "none",
+                  "citation": "Article 6",
+                  "rationale": "No Annex I or Annex III area is apparent from what
+                    was submitted, but the screening cannot conclude minimal risk
+                    because required information is missing: deployment_context
+                    (would decide: article_50); human_oversight (would decide:
+                    high_risk, minimal); data (would decide: minimal). Asked of
+                    the submitter rather than assumed." },
+  "article_50": { "applies": true, "matched_checks": ["art50_1", "art50_2"],
+                  "citation": "Article 50(1)",
+                  "obligation": "Tell the person they are interacting with an AI
+                    system (Article 50(1)), unless it is obvious. Mark generated
+                    content as artificially generated (Article 50(2))." },
+  "overall": "insufficient_information",
+  "evidence": ["intended_purpose: \\"Suggest the three most likely help centre
+                articles for each incoming ticket...\\"",
+               "users_affected: \\"The ten support specialists...\\""],
+  "gaps": ["deployment_context (would decide: article_50)",
+           "human_oversight (would decide: high_risk, minimal)",
+           "data (would decide: minimal)"],
+  "local_policy": ["AI-generated text is never sent to a customer without a human
+                    reading it. (knowledge-base/policies/ai-usage.md)"],
+  "human_review": { "required": true, "who": ["E26"],
+                    "why": "The submitter needs to answer the missing fields." }
+}`,
+    offline:`The YAML decision tree walked with keyword sets (risk.py:106-440).
+Crucially, the Annex III tests read ONLY the intended_purpose and
+users_affected fields, not the whole record:
+
+  purpose = tokens(record, ("intended_purpose", "users_affected"))
+  if purpose & HIRING and purpose & ASSESS:            -> Annex III point 4(a)
+  if purpose & WORKER_MANAGEMENT and purpose & ASSESS
+     and purpose & PEOPLE:                             -> Annex III point 4(b)
+
+Why: scanning the whole record produced false positives — an idea whose users
+happened to include the word "staff" was read as monitoring staff.
+
+Then a hard safety rule: if any field the screening needs is missing, the
+verdict is forced to insufficient_information even if a model said "minimal".`,
+    real:'For RI-0001: no prohibited practice, no Annex III area — but <b>Article 50 applies</b> (a drafted suggestion reaches a customer-facing reply), and the overall verdict is <b>insufficient_information</b> because three fields were never collected. That verdict is what blocks it at the gate.'
+  },
+  {
+    key:'feasibility', name:'4 · Feasibility',
+    q:'Can this company actually build it?',
+    why:'Runs before scoring, because the RICE Effort number comes from this step rather than being invented twice.',
+    facts:[
+      ['<code>skills_available(conn, required)</code>','who holds each skill, their free capacity and day rate'],
+      ['<code>system_integrability(conn, names)</code>','does each system have an API?'],
+      ['<code>dataset_fitness(conn, topics)</code>','which dataset would it be built on, and is it good enough?'],
+      ['<code>capacity_outlook(conn, person_days)</code>','effort vs. the 60 pd/month allocation and the 1,058 pd backlog'],
+      ['<code>budget_outlook(conn, cost_eur)</code>','cost vs. €142,000 unspent, plus the approval path'],
+      ['<code>policy_constraints(conn, text)</code>','policy rules that block or require approval'],
+      ['<code>strategy_alignment(conn, text)</code>','which 2027 priorities it supports'],
+      ['<code>related_pain_points(conn, text)</code>','documented pain points it would address']],
+    prompt:`You read a proposed use case and name what delivering it would
+require. You do NOT judge whether the company can do it — another step does
+that against real data.
+
+Return JSON only: {required_skills, required_systems, data_topics,
+  est_person_days, people_required, external_spend_eur, delivery_steps,
+  assumptions, open_questions}
+
+- If the submitter gave an effort figure, use it and do not change it. If they
+  gave none you may estimate, but add an assumption saying the estimate is
+  yours, not theirs.
+- Name skills the way they appear on a CV. Do not invent exotic skills.
+- Only list systems the submission actually implies.`,
+    json:`{
+  "verdict": "doable_with_constraints",
+  "est_person_days": 20, "people_required": 1,
+  "est_cost_eur": 9540, "day_rate_eur": 477,
+  "effort_source": "agent estimate",
+  "assumptions": [
+    "The submitter gave no effort figure. 20 person-days is the agent's own
+     rough estimate from the scope, not theirs.",
+    "People required (1) estimated by the agent from the skills involved."],
+  "dimensions": {
+    "skills":     { "status": "partial",
+      "note": "Held by three or fewer people: data modelling, technical writing.",
+      "cites": ["knowledge-base/people/employees.csv",
+                "knowledge-base/people/capacity.csv"] },
+    "systems":    { "status": "unknown",
+      "note": "No systems were named, so this is unchecked." },
+    "data":       { "status": "partial",
+      "note": "Would be built on Internal helpdesk tickets (medium: free text
+               only, about 7,500 since 2024). Also matched, but low quality:
+               Help centre articles, Internal documentation." },
+    "capacity":   { "status": "tight",
+      "note": "20 person-days fits inside one month of the 60 person-day
+               internal allocation, but 1058 person-days are already committed
+               (about 17.6 months of backlog)..." },
+    "budget":     { "status": "ok",
+      "note": "EUR 9,540 against EUR 142,000 still unspent of the EUR 250,000
+               internal tooling budget. Department head decides." },
+    "compliance": { "status": "attention",
+      "note": "Allowed with approval: AI-generated text is never sent to a
+               customer without a human reading it." },
+    "strategy":   { "status": "aligned",
+      "note": "Supports priority 2 (Reduce support load), 5 (Use AI where it
+               pays off), 4 (Shorten delivery time). Overlaps active work:
+               P02 Help centre refresh (delayed)." }
+  },
+  "blockers": []
+}`,
+    offline:`This is the step that needs a model LEAST. The split is deliberate:
+
+  model (or keyword rules) ->  WHAT the idea requires
+  knowledge graph          ->  WHAT WE HAVE, and all the arithmetic
+
+A model is bad at remembering how many people hold a skill, and worse at
+budget arithmetic — so it never does either. Offline, the extraction is:
+
+  SKILL_HINTS: task words -> CV skills
+    {search, knowledge, question, document, retrieve} -> [Python, data
+      modelling, technical writing]
+  systems: any System node whose name literally appears in the text
+  effort:  regex over the employee's words
+    "three weeks" -> 15 pd ; "a couple of days" -> 2 pd ; "no idea" -> None
+
+  If effort is None, the agent estimates it and LABELS it as its own
+  (effort_source: "agent estimate") — which is exactly what happened here.
+
+Every dimension verdict and every number is computed by kg/query.py in both
+modes. The worst dimension decides the overall verdict.`,
+    real:'Note <code>systems: unknown</code>. Luis never said which systems it would touch, so the step does not guess — it records that it could not check. And note the cost: €9,540, from 20 person-days × a €477/day support rate, both of which came out of <code>capacity.csv</code>.'
+  },
+  {
+    key:'score', name:'5 · Score',
+    q:'How does it compare with the other 42?',
+    why:'Last, because it consumes the feasibility effort estimate. Business value only — no risk factor enters this number.',
+    facts:[['<code>(none)</code>','This step reads the record and the feasibility payload. The bands and caps come from <code>config/scoring/rice-v1.yaml</code>.']],
+    prompt:`You estimate the RICE inputs from what the submitter actually wrote.
+Return JSON only: {reach_value, reach_units, reach_evidence, impact_label,
+  impact_rationale, impact_basis, confidence_evidence, assumptions,
+  what_would_raise_confidence}
+
+- reach_value MUST come from the submission. If no number was given, return
+  null. Do not infer a number from the company's size.
+- impact_basis is 'measured' only if the figure plainly comes from a system,
+  'estimated' if from experience with a stated basis, 'guessed' otherwise.
+- Be strict with impact. 'massive' means the task essentially disappears.`,
+    json:`{
+  "score": 8.0,
+  "scored": true,
+  "config": { "file": "rice-v1", "version": 1, "label": "RICE v1 (balanced)",
+              "formula": "(reach * impact * confidence) / effort",
+              "time_period": "per month" },
+  "factors": {
+    "reach":      { "value": 10.0, "raw": 1250, "band": "over 1,000 per month",
+                    "evidence": "'1,250 tickets a month'" },
+    "impact":     { "value": 1.0, "label": "medium", "basis": "estimated",
+                    "guidance": "10 to 30% better on the stated measure",
+                    "rationale": "Derived from the wording of the expected
+                                  benefit by rule, not by model." },
+    "confidence": { "value": 0.8, "label": "moderate", "caps_applied": [] },
+    "effort":     { "value": 1.0, "raw": 20, "band": "1 to 4 weeks",
+                    "source": "agent estimate" }
+  },
+  "explanation": "Reach 10.0 (over 1,000 per month) x Impact 1.0 (medium)
+                  x Confidence 0.8 (moderate) / Effort 1.0 (1 to 4 weeks) = 8.0",
+  "reported_separately": { "est_cost_eur": 9540, "people_required": 1,
+                           "feasibility_verdict": "doable_with_constraints" }
+}`,
+    offline:`Regex and keyword tiers (score.py:79-152):
+
+  REACH   regex for a number with a time period, then normalise to per month
+          "1,250 tickets a month" -> 1250 -> band ">1000/month" -> 10
+          No number with a period? -> None, and the idea is NOT scored.
+
+  IMPACT  keyword tiers over the benefit sentence
+          {eliminate, removes, halve, 50%..90%}      -> high   (2.0)
+          {faster, fewer, reduce, save, cut, ...}    -> medium (1.0)
+          {easier, nicer, clearer}                   -> low    (0.5)
+
+  CONFID. a number present + a reach figure -> moderate (0.8)
+          a number but no reach             -> weak     (0.5)
+          no number at all                  -> guessed  (0.3)
+          rice-v1.yaml then CAPS it: 0.5 if the basis is a guess, 0.8 if
+          'data' or 'effort' is missing. Honesty is enforced, not optional.
+
+  EFFORT  the feasibility person-days, banded.
+
+Then the arithmetic from the YAML. Nothing here is a judgement call the code
+makes silently — every band and cap is in the config file.`,
+    real:'<b>8.0, rank 3 of 43.</b> Note what it is <i>not</i>: Confidence is 0.8 rather than 1.0 because the benefit was estimated rather than measured, and <code>est_cost_eur</code>, <code>people_required</code> and the feasibility verdict are reported <b>separately</b> — deliberately outside the score, so the board sees them as their own columns.'
+  }
+];
+
+const nav = document.getElementById('stepNav');
+const stage = document.getElementById('stage');
+STEPS.forEach((s, i) => {
+  const b = document.createElement('button');
+  b.textContent = s.name;
+  b.onclick = () => show(i);
+  nav.appendChild(b);
+});
+function esc(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function show(i){
+  [...nav.children].forEach((b, j) => b.classList.toggle('on', i === j));
+  const s = STEPS[i];
+  stage.innerHTML = `
+    <h3 style="margin-top:0">${s.name} — ${s.q}</h3>
+    <p style="color:var(--ink2);margin:0 0 4px"><b>Why here in the order:</b> ${s.why}</p>
+    <h4>Facts fetched from the knowledge graph first</h4>
+    <table>${s.facts.map(f => `<tr><td style="width:300px">${f[0]}</td><td>${f[1]}</td></tr>`).join('')}
+    </table>
+    <div class="tabs" id="tb">
+      <button class="on" data-t="0">The prompt (shortened)</button>
+      <button data-t="1">Real JSON saved for RI-0001</button>
+      <button data-t="2">With no API key, instead</button>
+    </div>
+    <div class="tabbody">
+      <div data-p="0"><figure style="margin-top:10px"><figcaption>system prompt,
+        abridged — full text in compass/agents/${s.key}.py</figcaption>
+        <pre>${esc(s.prompt)}</pre></figure></div>
+      <div data-p="1" class="hide"><figure style="margin-top:10px">
+        <figcaption>assessments table · use_case_id = RI-0001 · kind = ${s.key}
+        · model = offline-rules-v1</figcaption>
+        <pre>${esc(s.json)}</pre></figure></div>
+      <div data-p="2" class="hide"><figure style="margin-top:10px">
+        <figcaption>the deterministic fallback in compass/agents/${s.key}.py</figcaption>
+        <pre>${esc(s.offline)}</pre></figure></div>
+    </div>
+    <div class="note" style="margin-bottom:0"><b>What this told us about RI-0001:</b>
+      ${s.real}</div>`;
+  const tb = stage.querySelector('#tb');
+  tb.querySelectorAll('button').forEach(b => b.onclick = () => {
+    tb.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    stage.querySelectorAll('[data-p]').forEach(p =>
+      p.classList.toggle('hide', p.dataset.p !== b.dataset.t));
+  });
+}
+show(0);
+</script>
+</body>
+</html>

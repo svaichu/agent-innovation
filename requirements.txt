@@ -1,0 +1,11 @@
+# AI Compass. Python 3.11+.
+gradio>=6.0
+openai-agents          # also pulls in the openai SDK
+pydantic>=2
+pyyaml
+fastapi               # compass/serve.py mounts both apps
+uvicorn               # ...and serves them on one port
+
+# Only needed when LLM_PROVIDER=anthropic:
+#   .venv/bin/pip install anthropic
+anthropic>=1.0
