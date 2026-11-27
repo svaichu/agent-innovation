@@ -14,6 +14,7 @@ All people are fictional. The same data is in [employees.csv](employees.csv).
 |---|---|---|---|---|---|---|---|
 | E01 | Katharina Vogel | CEO & Co-founder | none | hybrid | 2019-03-01 | Company strategy, final approvals, top accounts | E02 |
 | E02 | Jonas Adler | CTO & Co-founder | E01 | hybrid | 2019-03-01 | Technology strategy, security, architecture decisions | E01 |
+| E31 | Eslam Shoaala | Chief Innovation Officer | E01 | tbd | 2026-11-27 | tbd | tbd |
 
 ## Product & Engineering
 | ID | Name | Role | Manager | Work mode | Start | Responsible for | Deputy |

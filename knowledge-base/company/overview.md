@@ -7,14 +7,14 @@ last_updated: 2026-11-27
 
 # Company overview
 
-Brambleworks GmbH is a **fictional** company with 30 employees, based in Aachen, Germany. It makes indoor air-quality sensors and the cloud software that monitors them, mainly for schools, offices and light industry.
+Brambleworks GmbH is a **fictional** company with 31 employees, based in Aachen, Germany. It makes indoor air-quality sensors and the cloud software that monitors them, mainly for schools, offices and light industry.
 
 ## Facts
 | Item | Value |
 |---|---|
 | Founded | March 2019 |
 | Founders | Katharina Vogel (E01), Jonas Adler (E02) |
-| Headcount | 30 |
+| Headcount | 31 |
 | Revenue 2025 (actual) | EUR 2.90 million |
 | Revenue 2026 (forecast) | EUR 3.40 million |
 | Active customers | 182 |

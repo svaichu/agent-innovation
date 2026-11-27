@@ -40,4 +40,5 @@ Katharina Vogel (E01), CEO & Co-founder
     Jan Peters (E24), Accountant
     Fatima El-Amrani (E25), People & Culture Generalist
   Diyana Muhammed (E27), Head of HR
+  Eslam Shoaala (E31), Chief Innovation Officer
 ```

@@ -2,7 +2,7 @@
 title: "Management"
 owner: E01
 classification: internal
-last_updated: 2026-11-26
+last_updated: 2026-11-27
 ---
 
 # Management
@@ -10,11 +10,12 @@ last_updated: 2026-11-26
 ## Mission
 Set direction, allocate money and people, and remove blockers.
 
-## Team (2)
+## Team (3)
 | ID | Name | Role | Skills |
 |---|---|---|---|
 | E01 | Katharina Vogel | CEO & Co-founder | Strategy; fundraising; key accounts |
 | E02 | Jonas Adler | CTO & Co-founder | Architecture; embedded systems; security |
+| E31 | Eslam Shoaala | Chief Innovation Officer | tbd |
 
 ## Responsibilities
 - Annual plan and quarterly review
