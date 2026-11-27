@@ -19,10 +19,17 @@ def format_idea(idea: RawIdea) -> str:
         author = f"{idea.author_id} (not in the employee list)"
     # Move the idea's headings below the one used for its title.
     body = re.sub(r"^#", "###", body.strip(), flags=re.MULTILINE)
+    updated = ""
+    if idea.updated_at:
+        updated = (
+            f"  \n**Updated:** {idea.updated_at.astimezone():%Y-%m-%d %H:%M} "
+            f"(version {idea.version})"
+        )
     return (
         f"## {idea.id}: {first_line.removeprefix('# ')}\n"
         f"**Proposed by:** {author}  \n"
-        f"**Submitted:** {idea.created_at.astimezone():%Y-%m-%d %H:%M}\n\n"
+        f"**Submitted:** {idea.created_at.astimezone():%Y-%m-%d %H:%M}"
+        f"{updated}\n\n"
         f"{body}"
     )
 

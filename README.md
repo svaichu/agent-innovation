@@ -12,7 +12,8 @@ Suggestion boxes tend to fill up with one-line ideas that nobody can judge. Here
 2. **Describe the idea.** The agent asks one short question at a time, in the employee's language.
 3. **Check the draft.** When nothing is missing, the agent shows the complete idea.
 4. **Submit.** Only the "Submit idea" button stores it, under an ID such as `RI-0001`.
-5. **Review.** The dashboard lists every idea, newest first, with its author and department.
+5. **Improve.** Employees can ask the agent to show their submitted ideas and change one. The "Update idea" button saves the new version under the same ID, and earlier versions are kept.
+6. **Review.** The dashboard lists every idea, newest first, with its author and department.
 
 A complete idea covers:
 
@@ -27,7 +28,8 @@ A complete idea covers:
 
 ### Design choices
 
-- **The employee stays in control.** The agent cannot submit anything. It can only propose a draft.
+- **The employee stays in control.** The agent cannot submit or change anything. It can only propose a draft.
+- **Own ideas only.** The agent can read only the ideas of the logged-in employee.
 - **No invented details.** The agent is instructed to use only what the employee said, and to record the rest as unknown.
 - **No judging at intake.** Collecting an idea and scoring it are kept separate.
 - **The author comes from the login**, so it cannot be chosen in the chat.
@@ -38,6 +40,7 @@ A complete idea covers:
 | Part | State |
 |---|---|
 | Intake chat | Working |
+| Viewing and improving submitted ideas | Working |
 | Innovation Dashboard (raw ideas and their authors) | Working |
 | Knowledge base sync to Postgres | Working |
 | Agents reading the knowledge base | Planned |

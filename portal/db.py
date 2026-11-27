@@ -45,6 +45,19 @@ TABLES = [
         created_at timestamptz NOT NULL DEFAULT now()
     )
     """,
+    # Added after the first release, so existing tables get them too.
+    "ALTER TABLE app_generated.raw_idea "
+    "ADD COLUMN IF NOT EXISTS version integer NOT NULL DEFAULT 1",
+    "ALTER TABLE app_generated.raw_idea ADD COLUMN IF NOT EXISTS updated_at timestamptz",
+    """
+    CREATE TABLE IF NOT EXISTS app_generated.raw_idea_history (
+        idea_id  text NOT NULL REFERENCES app_generated.raw_idea (id),
+        version  integer NOT NULL,
+        text     text NOT NULL,
+        saved_at timestamptz NOT NULL,
+        PRIMARY KEY (idea_id, version)
+    )
+    """,
 ]
 
 

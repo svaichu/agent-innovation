@@ -48,19 +48,22 @@ Company information and app-generated data are kept apart:
 | Postgres schema | Contains | Source of truth |
 |---|---|---|
 | `knowledge_base` | Company information: `documents`, `employees` | Files in `knowledge-base/`, copied with the sync script |
-| `app_generated` | Everything the app creates: `raw_idea`, later `refined_idea` | The database only |
+| `app_generated` | Everything the app creates: `raw_idea`, `raw_idea_history`, later `refined_idea` | The database only |
 
 The knowledge base never contains app-generated data.
 
 ```
-RawIdea      { id, author_id, text, created_at }
+RawIdea      { id, author_id, text, version, created_at, updated_at }
+RawIdeaHistory { idea_id, version, text, saved_at }
 RefinedIdea  { id, version, text, source_ids[2..n], updated_at }
 Score        { idea_id, idea_version, metric_name, metric_version,
                value, rationale, scored_at }
 ```
 
+- A raw idea starts at version 1. Its author can improve it, which raises the version. Earlier texts are kept in `raw_idea_history`.
+- An improved raw idea is still a raw idea, with the same ID. Improving it never creates a refined idea.
+- `RefinedIdea` is planned and not built yet. Only Merge creates one, by combining two or more raw ideas.
 - A raw idea can feed several refined ideas.
-- A raw idea has version 1 for scoring purposes.
 
 ## 4. Metric contract
 
@@ -81,6 +84,7 @@ scale: 0-100
 ## 5. Flows
 
 1. **Submit:** chat → Intake → employee confirms → RawIdea stored.
+   **Improve:** chat → Intake reads the employee's own RawIdea → employee confirms → new version stored.
 2. **Merge:** a new RawIdea triggers Merge, which creates a RefinedIdea, adds a source to an existing one (new version), or does nothing.
 3. **Score:** every new or changed idea is scored.
 4. **Metric change:** a new metric version rescores all ideas.

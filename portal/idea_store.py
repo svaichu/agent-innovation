@@ -53,29 +53,66 @@ def save_raw_idea(draft: IdeaDraft, author_id: str) -> str:
     return idea_id
 
 
+def update_raw_idea(idea_id: str, draft: IdeaDraft, author_id: str) -> bool:
+    """Replace the author's idea, keeping the earlier text in raw_idea_history.
+
+    False if the author has no idea with this ID.
+    """
+    text = to_markdown(draft)
+    with connect() as connection:
+        # Locked until commit, so two updates cannot save the same version.
+        row = connection.execute(
+            "SELECT text FROM app_generated.raw_idea "
+            "WHERE id = %s AND author_id = %s FOR UPDATE",
+            (idea_id, author_id),
+        ).fetchone()
+        if row is None:
+            return False
+        if row[0] != text:
+            connection.execute(
+                "INSERT INTO app_generated.raw_idea_history "
+                "(idea_id, version, text, saved_at) "
+                "SELECT id, version, text, COALESCE(updated_at, created_at) "
+                "FROM app_generated.raw_idea WHERE id = %s",
+                (idea_id,),
+            )
+            connection.execute(
+                "UPDATE app_generated.raw_idea "
+                "SET text = %s, version = version + 1, updated_at = now() "
+                "WHERE id = %s",
+                (text, idea_id),
+            )
+    return True
+
+
 class RawIdea(BaseModel):
     """A stored idea. The name and department are None if the author is unknown."""
 
     id: str
     text: str
     created_at: datetime
+    version: int
+    updated_at: datetime | None
     author_id: str
     author_name: str | None
     department: str | None
 
 
-def list_raw_ideas() -> list[RawIdea]:
-    """Every raw idea with its author, newest first."""
+def list_raw_ideas(author_id: str | None = None) -> list[RawIdea]:
+    """Raw ideas with their authors, newest first. All of them, or one author's."""
     with connect() as connection:
         return (
             connection.cursor(row_factory=class_row(RawIdea))
             .execute(
-                "SELECT idea.id, idea.text, idea.created_at, idea.author_id, "
+                "SELECT idea.id, idea.text, idea.created_at, idea.version, "
+                "idea.updated_at, idea.author_id, "
                 "employee.name AS author_name, employee.department "
                 "FROM app_generated.raw_idea AS idea "
                 "LEFT JOIN knowledge_base.employees AS employee "
                 "ON employee.id = idea.author_id "
-                "ORDER BY idea.created_at DESC, idea.id DESC"
+                "WHERE %(author)s::text IS NULL OR idea.author_id = %(author)s "
+                "ORDER BY idea.created_at DESC, idea.id DESC",
+                {"author": author_id},
             )
             .fetchall()
         )
